@@ -119,6 +119,7 @@ var staticFileExceptions = []string{
 	"api.html",
 	"guidelines.html",
 	"Makefile",
+	"README.md",
 }
 
 func isStaticFileExempt(filename string) bool {

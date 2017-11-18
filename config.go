@@ -2,8 +2,8 @@ package qbin
 
 var Config = map[string]string{
 	"frontend-path": "./frontend",
-	"http":          ":3000",
+	"http":          ":8000",
 	"tcp":           ":9000",
-	"root":          "https://qbin.io",
-	"relative-root": "/",
+	"root":          "http://127.0.0.1:8000",
+	"path":          "",
 }

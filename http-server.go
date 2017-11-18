@@ -19,7 +19,7 @@ func escapeHTML(content string) string {
 }
 
 func rootReplace(content string) string {
-	return strings.Replace(strings.Replace(content, "$$relative-root$$", Config["relative-root"], -1), "$$root$$", Config["root"], -1)
+	return strings.Replace(strings.Replace(content, "$$path$$", Config["path"], -1), "$$root$$", Config["root"], -1)
 }
 
 ////////////
@@ -206,6 +206,6 @@ func StartHTTPServer() {
 	// 404 error page
 	r.PathPrefix("/").HandlerFunc(notFoundRoute)
 
-	log.Infof("HTTP server now listening on http://%s", Config["http"])
+	log.Infof("HTTP server now listening on %s, you should be able to reach it at %s", Config["http"], Config["root"]+Config["path"])
 	go http.ListenAndServe(Config["http"], r)
 }

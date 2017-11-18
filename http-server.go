@@ -88,11 +88,19 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 
 func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 	return staticAliasRoute("/index.html", func(body string) string {
-		return regexp.MustCompile("\\$\\$/?if_fork\\$\\$").ReplaceAllString(
-			regexp.MustCompile("\\$\\$!if_fork\\$\\$(?U:.*\\$\\$/if_fork\\$\\$)").ReplaceAllString(body, ""), "")
+		return regexp.MustCompile(`\$\$/?if_fork\$\$`).ReplaceAllString(
+			regexp.MustCompile(`\$\$!if_fork\$\$(?U:(?:.|\n)*\$\$/if_fork\$\$)`).ReplaceAllString(body, ""), "")
 	}, func(req *http.Request, body string) string {
-		content := `console.log("Hello <World>");` + "\n"
-		return strings.Replace(body, "></textarea>", ">"+escapeHTML(content)+"</textarea>", 1)
+
+		content := escapeHTML(`console.log("Hello <World>");` + "\n")
+		returnBody := strings.Replace(body, "$$id$$", strings.TrimPrefix(req.URL.Path, "/"), -1)
+		returnBody = strings.Replace(returnBody, "$$syntax$$", "javascript", -1)
+		returnBody = strings.Replace(returnBody, "$$creation$$", "2017-01-01 12:34", -1)
+		returnBody = strings.Replace(returnBody, "$$expiration$$", "2017-05-01 12:34", -1)
+		returnBody = strings.Replace(returnBody, "$$expiration-remaining$$", "2 days left", -1)
+		returnBody = strings.Replace(returnBody, "$$content$$", content, -1)
+
+		return returnBody
 	})
 }
 
@@ -187,8 +195,8 @@ func StartHTTPServer() {
 
 	// Static aliased HTML files
 	r.HandleFunc("/", staticAliasRoute("/index.html", func(body string) string {
-		return regexp.MustCompile("\\$\\$[/!]if_fork\\$\\$").ReplaceAllString(
-			regexp.MustCompile("\\$\\$if_fork\\$\\$(?U:.*\\$\\$/if_fork\\$\\$)").ReplaceAllString(body, ""), "")
+		return regexp.MustCompile(`\$\$[/!]if_fork\$\$`).ReplaceAllString(
+			regexp.MustCompile(`\$\$if_fork\$\$(?U:(?:.|\n)*\$\$/if_fork\$\$)`).ReplaceAllString(body, ""), "")
 	}, nil)).Methods("GET")
 	r.HandleFunc("/api", staticAliasRoute("/api.html", nil, nil)).Methods("GET")
 	r.HandleFunc("/guidelines", staticAliasRoute("/guidelines.html", nil, nil)).Methods("GET")
@@ -207,6 +215,9 @@ func StartHTTPServer() {
 	// 404 error page
 	r.PathPrefix("/").HandlerFunc(notFoundRoute)
 
-	log.Noticef("HTTP server now listening on %s, you should be able to reach it at %s", Config["http"], Config["root"]+Config["path"])
-	go http.ListenAndServe(Config["http"], r)
+	log.Noticef("HTTP server starting on %s, you should be able to reach it at %s", Config["http"], Config["root"]+Config["path"])
+	err := http.ListenAndServe(Config["http"], r)
+	if err != nil {
+		log.Criticalf("HTTP server error: %s", err)
+	}
 }

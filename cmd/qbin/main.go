@@ -25,13 +25,13 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:   "tcp",
-			Value:  ":90",
+			Value:  ":9000",
 			Usage:  "TCP (netcat API) listen address. Set to 'none' to disable.",
 			EnvVar: "TCP_LISTEN",
 		},
 		cli.StringFlag{
 			Name:   "frontend-path, p",
-			Value:  "/usr/share/qbin/frontend",
+			Value:  "./frontend",
 			Usage:  "Location of the frontend files.",
 			EnvVar: "FRONTEND_PATH",
 		},

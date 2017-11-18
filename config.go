@@ -1,9 +1,9 @@
 package qbin
 
 var Config = map[string]string{
-	"frontend-path": "/usr/share/qbin/frontend",
+	"frontend-path": "./frontend",
 	"http":          ":3000",
-	"tcp":           ":90",
+	"tcp":           ":9000",
 	"root":          "https://qbin.io",
 	"relative-root": "/",
 }

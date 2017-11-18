@@ -1,6 +1,7 @@
 package qbin
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -34,7 +35,7 @@ func staticRoute(body string) func(http.ResponseWriter, *http.Request) {
 }
 
 func staticAliasRoute(path string, manipulateSource func(string) string, manipulateResult func(*http.Request, string) string) func(http.ResponseWriter, *http.Request) {
-	body, err := loadStaticFile(Config["frontend-path"]+path, path)
+	body, err := loadStaticFile(Config["frontend-path"]+path, path, false)
 	if manipulateSource != nil {
 		body = manipulateSource(body)
 	}
@@ -47,9 +48,9 @@ func staticAliasRoute(path string, manipulateSource func(string) string, manipul
 			res.Header().Add("Content-Type", "text/html; charset=utf-8")
 			fmt.Fprintf(res, "%s", body)
 		}
-	} else {
-		return internalErrorRoute
 	}
+
+	return internalErrorRoute
 }
 
 func uploadRoute(res http.ResponseWriter, req *http.Request) {
@@ -63,7 +64,7 @@ func rawDocumentRoute(res http.ResponseWriter, req *http.Request) {
 }
 
 func documentRoute() func(http.ResponseWriter, *http.Request) {
-	body, err := loadStaticFile(Config["frontend-path"]+"/output.html", "/output.html")
+	body, err := loadStaticFile(Config["frontend-path"]+"/output.html", "/output.html", false)
 	if err == nil {
 		return func(res http.ResponseWriter, req *http.Request) {
 			// TODO: Check for curl/wget requests and return raw document
@@ -80,9 +81,9 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 			res.Header().Add("Content-Type", "text/html; charset=utf-8")
 			fmt.Fprintf(res, "%s", returnBody)
 		}
-	} else {
-		return internalErrorRoute
 	}
+
+	return internalErrorRoute
 }
 
 func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
@@ -120,17 +121,6 @@ var staticFileExceptions = []string{
 	"Makefile",
 }
 
-func loadStaticFile(path string, webPath string) (string, error) {
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Errorf("Couldn't read static file '%s' for the following reason: %s", webPath, err)
-		return "", err
-	} else {
-		log.Debugf("Added static file '%s'.", webPath)
-		return rootReplace(string(content)), nil
-	}
-}
-
 func isStaticFileExempt(filename string) bool {
 	if strings.HasSuffix(filename, ".styl") {
 		return true
@@ -143,6 +133,22 @@ func isStaticFileExempt(filename string) bool {
 	return false
 }
 
+func loadStaticFile(path string, webPath string, checkExceptions bool) (string, error) {
+	if checkExceptions && isStaticFileExempt(filepath.Base(path)) {
+		log.Debugf("Exempted static file '%s'.", webPath)
+		return "", errors.New("file is exempt")
+	}
+
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Errorf("Couldn't read static file '%s' for the following reason: %s", webPath, err)
+		return "", err
+	}
+
+	log.Debugf("Added static file '%s'.", webPath)
+	return rootReplace(string(content)), nil
+}
+
 func addStaticRoute(r *mux.Router) func(string, os.FileInfo, error) error {
 	return func(path string, f os.FileInfo, err error) error {
 		if err == nil {
@@ -151,10 +157,10 @@ func addStaticRoute(r *mux.Router) func(string, os.FileInfo, error) error {
 				webPath = "/" + webPath
 			}
 
-			if !f.IsDir() && !strings.Contains(webPath, "/.") && !isStaticFileExempt(f.Name()) {
+			if !f.IsDir() && !strings.Contains(webPath, "/.") {
 
 				// Read & serve file
-				content, err := loadStaticFile(path, webPath)
+				content, err := loadStaticFile(path, webPath, true)
 				if err == nil {
 					r.HandleFunc(webPath, staticRoute(content)).Methods("GET")
 				}
@@ -171,6 +177,7 @@ func addStaticRoute(r *mux.Router) func(string, os.FileInfo, error) error {
 // Server Initialization //
 ///////////////////////////
 
+// StartHTTPServer starts the HTTP server which is responsible for the frontend and the HTTP API.
 func StartHTTPServer() {
 	r := mux.NewRouter()
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"../.."
+	"github.com/qbin-io/backend"
 	"github.com/urfave/cli"
 )
 
@@ -59,11 +59,10 @@ func main() {
 
 		qbin.StartHTTPServer()
 
+		// TODO: Any good way to make cli not exit immediately?
 		for {
-			time.Sleep(3600 * time.Second)
+			time.Sleep(time.Hour)
 		}
-
-		return nil
 	}
 
 	app.Run(os.Args)

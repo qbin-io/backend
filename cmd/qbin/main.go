@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -46,9 +47,15 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		qbin.Config["http"] = c.String("http")
 		qbin.Config["tcp"] = c.String("tcp")
-		qbin.Config["frontend-path"] = c.String("frontend-path")
-		qbin.Config["root"] = strings.TrimSuffix(c.String("root"), "/")
 
+		frontendPath, err := filepath.Abs(c.String("frontend-path"))
+		if err != nil {
+			println("Frontend path couldn't be resolved.")
+			panic(err)
+		}
+		qbin.Config["frontend-path"] = frontendPath
+
+		qbin.Config["root"] = strings.TrimSuffix(c.String("root"), "/")
 		// https://example.org/[grab this part]
 		rootSplit := strings.SplitAfterN(qbin.Config["root"], "/", 4)
 		relativeRoot := "/"

@@ -206,6 +206,6 @@ func StartHTTPServer() {
 	// 404 error page
 	r.PathPrefix("/").HandlerFunc(notFoundRoute)
 
-	log.Infof("HTTP server now listening on %s, you should be able to reach it at %s", Config["http"], Config["root"]+Config["path"])
+	log.Noticef("HTTP server now listening on %s, you should be able to reach it at %s", Config["http"], Config["root"]+Config["path"])
 	go http.ListenAndServe(Config["http"], r)
 }

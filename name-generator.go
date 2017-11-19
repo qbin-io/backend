@@ -2,6 +2,7 @@ package qbin
 
 import (
 	"crypto/rand"
+	"errors"
 	"io/ioutil"
 	"math/big"
 	"strings"
@@ -35,6 +36,9 @@ func LoadWordsFile(filename string) error {
 			if len(word) > 0 && !strings.HasPrefix(word, "#") {
 				words = append(words, word)
 			}
+		}
+		if len(words) == 0 {
+			return errors.New("file doesn't contain any words")
 		}
 		Log.Debugf("%d words loaded.", len(words))
 	}

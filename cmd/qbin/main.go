@@ -49,42 +49,44 @@ func main() {
 	app.HideHelp = true
 	cli.AppHelpTemplate = strings.Replace(cli.AppHelpTemplate, "GLOBAL OPTIONS:", "OPTIONS:", 1)
 
-	app.Action = func(c *cli.Context) error {
-		if c.Bool("help") {
-			cli.ShowAppHelp(c)
-			return nil
-		}
-
-		if c.Bool("debug") {
-			qbin.SetLogLevel(logging.DEBUG)
-		}
-
-		// Load words
-		err := qbin.LoadWordsFile(c.String("wordlist"))
-		if err != nil {
-			qbin.Log.Errorf("Error loading word list from '%s': %s", "", err)
-		}
-
-		// Connect to database
-		err = qbin.Connect(c.String("database"))
-		if err != nil {
-			qbin.Log.Criticalf("Error connecting to database: %s", err)
-			panic(err)
-		}
-
-		// Serve HTTP
-		if c.String("http") != "none" {
-			go qbinHTTP.StartHTTP(c.String("http"), c.String("frontend-path"), c.String("root"))
-		}
-
-		// Serve TCP
-		if c.String("tcp") != "none" {
-			go qbinTCP.StartTCP(c.String("tcp"), c.String("root"))
-		}
-
-		// Sleep
-		select {}
-	}
+	app.Action = run
 
 	app.Run(os.Args)
+}
+
+func run(c *cli.Context) error {
+	if c.Bool("help") {
+		cli.ShowAppHelp(c)
+		return nil
+	}
+
+	if c.Bool("debug") {
+		qbin.SetLogLevel(logging.DEBUG)
+	}
+
+	// Load words
+	err := qbin.LoadWordsFile(c.String("wordlist"))
+	if err != nil {
+		qbin.Log.Errorf("Error loading word list from '%s': %s", c.String("wordlist"), err)
+	}
+
+	// Connect to database
+	err = qbin.Connect(c.String("database"))
+	if err != nil {
+		qbin.Log.Criticalf("Error connecting to database: %s", err)
+		panic(err)
+	}
+
+	// Serve HTTP
+	if c.String("http") != "none" {
+		go qbinHTTP.StartHTTP(c.String("http"), c.String("frontend-path"), c.String("root"))
+	}
+
+	// Serve TCP
+	if c.String("tcp") != "none" {
+		go qbinTCP.StartTCP(c.String("tcp"), c.String("root"))
+	}
+
+	// Sleep
+	select {}
 }

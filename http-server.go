@@ -124,7 +124,6 @@ var staticFileExceptions = []string{
 	"index.html",
 	"output.html",
 	"report.html",
-	"api.html",
 	"guidelines.html",
 	"Makefile",
 	"README.md",
@@ -198,7 +197,6 @@ func StartHTTPServer() {
 		return regexp.MustCompile(`\$\$[/!]if_fork\$\$`).ReplaceAllString(
 			regexp.MustCompile(`\$\$if_fork\$\$(?U:(?:.|\n)*\$\$/if_fork\$\$)`).ReplaceAllString(body, ""), "")
 	}, nil)).Methods("GET")
-	r.HandleFunc("/api", staticAliasRoute("/api.html", nil, nil)).Methods("GET")
 	r.HandleFunc("/guidelines", staticAliasRoute("/guidelines.html", nil, nil)).Methods("GET")
 
 	// Static files

@@ -19,6 +19,9 @@ var flags = []cli.Flag{
 		Name: "root, r", EnvVar: "ROOT_URL", Value: "http://127.0.0.1:8000",
 		Usage: "The path under which the application will be reachable from the internet."},
 	cli.StringFlag{
+		Name: "wordlist", EnvVar: "WORD_LIST", Value: "eff_large_wordlist.txt",
+		Usage: "Word list used for random slug generation."},
+	cli.StringFlag{
 		Name: "tcp", EnvVar: "TCP_LISTEN", Value: ":9000",
 		Usage: "TCP (netcat API) listen address. Set to 'none' to disable."},
 	cli.StringFlag{
@@ -56,9 +59,16 @@ func main() {
 			qbin.SetLogLevel(logging.DEBUG)
 		}
 
-		// Connect
-		err := qbin.Connect(c.String("database"))
+		// Load words
+		err := qbin.LoadWordsFile(c.String("wordlist"))
 		if err != nil {
+			qbin.Log.Errorf("Error loading word list from '%s': %s", "", err)
+		}
+
+		// Connect to database
+		err = qbin.Connect(c.String("database"))
+		if err != nil {
+			qbin.Log.Criticalf("Error connecting to database: %s", err)
 			panic(err)
 		}
 

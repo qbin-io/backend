@@ -21,6 +21,7 @@ var staticFileExceptions = []string{
 	"guidelines.html",
 	"Makefile",
 	"README.md",
+	"LICENSE",
 	".styl",
 }
 

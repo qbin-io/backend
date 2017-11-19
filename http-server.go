@@ -93,7 +93,7 @@ func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 	}, func(req *http.Request, body string) string {
 
 		content := escapeHTML(`console.log("Hello <World>");` + "\n")
-		returnBody := strings.Replace(body, "$$id$$", strings.TrimPrefix(req.URL.Path, "/"), -1)
+		returnBody := strings.Replace(body, "$$id$$", strings.TrimSuffix(strings.TrimPrefix(req.URL.Path, "/"), "/fork"), -1)
 		returnBody = strings.Replace(returnBody, "$$syntax$$", "javascript", -1)
 		returnBody = strings.Replace(returnBody, "$$creation$$", "2017-01-01 12:34", -1)
 		returnBody = strings.Replace(returnBody, "$$expiration$$", "2017-05-01 12:34", -1)

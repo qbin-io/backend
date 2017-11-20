@@ -19,6 +19,7 @@ type Configuration struct {
 	Root          string
 	Path          string
 	CertWhitelist []string
+	ForceRoot     bool
 }
 
 var config Configuration
@@ -57,10 +58,25 @@ func StartHTTP(initialConfig Configuration) {
 	setupRoutes(r)
 
 	// Middlewares
-	n := negroni.Classic()
+	n := negroni.New(negroni.NewRecovery())
+	// Add important headers
 	n.UseHandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Server", "qbin")
 	})
+	// Redirect to root
+	if config.ForceRoot {
+		n.UseFunc(func(res http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+			if req.Host != config.domain || !strings.HasPrefix(req.URL.Path, config.path+"/") {
+				if !strings.HasPrefix(req.URL.Path, config.path+"/") {
+					res.Header().Add("Location", config.Root)
+				} else {
+					res.Header().Add("Location", config.Root+config.path+strings.TrimPrefix(req.URL.Path, config.path))
+				}
+			} else {
+				next(res, req)
+			}
+		})
+	}
 	n.UseHandler(r)
 
 	// Serve

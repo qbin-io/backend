@@ -18,6 +18,9 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		Name: "root, r", EnvVar: "ROOT_URL", Value: "http://127.0.0.1:8000",
 		Usage: "The path under which the application will be reachable from the internet."},
+	cli.BoolFlag{
+		Name:  "force-root",
+		Usage: "If this is set, requests that are not on the root URI will be redirected."},
 	cli.StringFlag{
 		Name: "wordlist", EnvVar: "WORD_LIST", Value: "eff_large_wordlist.txt",
 		Usage: "Word list used for random slug generation."},
@@ -88,6 +91,7 @@ func run(c *cli.Context) error {
 			FrontendPath:  c.String("frontend-path"),
 			Root:          c.String("root"),
 			CertWhitelist: c.Args(),
+			ForceRoot:     c.Bool("force-root"),
 		})
 	}
 

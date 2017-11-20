@@ -1,7 +1,9 @@
 package qbinHTTP
 
 import (
+	"context"
 	"crypto/tls"
+	"errors"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -17,7 +19,8 @@ type Configuration struct {
 	ListenHTTPS   string
 	FrontendPath  string
 	Root          string
-	Path          string
+	path          string
+	domain        string
 	CertWhitelist []string
 	ForceRoot     bool
 }
@@ -39,11 +42,13 @@ func initializeConfig(initialConfig Configuration) {
 
 	// Extract "path" fron "root"
 	rootParts := strings.SplitAfterN(config.Root, "/", 4) // https://example.org/[grab this part]
-	config.Path = "/"
+	config.path = ""
 	if len(rootParts) > 3 { // Otherwise: application in root folder
-		config.Path = "/" + rootParts[3]
+		config.path = rootParts[3]
 	}
-	config.Path = strings.TrimSuffix(config.Path, "/")
+	config.path = "/" + strings.TrimPrefix(strings.TrimSuffix(config.path, "/"), "/")
+
+	config.domain = strings.Split(strings.TrimPrefix(strings.ToLower(config.Root), "https://"), "/")[0]
 }
 
 // StartHTTP launches the HTTP server which is responsible for the frontend and the HTTP API.
@@ -94,10 +99,20 @@ func StartHTTP(initialConfig Configuration) {
 }
 
 func listenHTTPS(r http.Handler) {
+	whitelist := make(map[string]bool, len(config.CertWhitelist))
+	for _, h := range config.CertWhitelist {
+		whitelist[h] = true
+	}
+
 	certManager := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(config.CertWhitelist...),
-		Cache:      autocert.DirCache("certs"),
+		Prompt: autocert.AcceptTOS,
+		HostPolicy: func(_ context.Context, host string) error {
+			if host != config.domain && whitelist[host] != true {
+				return errors.New("TLS host not configured: " + host)
+			}
+			return nil
+		},
+		Cache: autocert.DirCache("certs"),
 	}
 	server := &http.Server{
 		Addr:    config.ListenHTTPS,

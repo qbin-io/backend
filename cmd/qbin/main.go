@@ -28,6 +28,9 @@ var flags = []cli.Flag{
 		Name: "http", EnvVar: "HTTP_LISTEN", Value: ":8000",
 		Usage: "HTTP listen address. Set to 'none' to disable."},
 	cli.StringFlag{
+		Name: "https", EnvVar: "HTTPS_LISTEN", Value: "none",
+		Usage: "HTTPS listen address, qbin will automatically get a Let's Encrypt certificate. Set to 'none' to disable."},
+	cli.StringFlag{
 		Name: "frontend-path, p", EnvVar: "FRONTEND_PATH", Value: "./frontend",
 		Usage: "Location of the frontend files."},
 	cli.BoolFlag{
@@ -78,8 +81,14 @@ func run(c *cli.Context) error {
 	}
 
 	// Serve HTTP
-	if c.String("http") != "none" {
-		go qbinHTTP.StartHTTP(c.String("http"), c.String("frontend-path"), c.String("root"))
+	if c.String("http") != "none" || c.String("https") != "none" {
+		go qbinHTTP.StartHTTP(qbinHTTP.Configuration{
+			ListenHTTP:    c.String("http"),
+			ListenHTTPS:   c.String("https"),
+			FrontendPath:  c.String("frontend-path"),
+			Root:          c.String("root"),
+			CertWhitelist: c.Args(),
+		})
 	}
 
 	// Serve TCP

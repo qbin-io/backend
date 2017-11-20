@@ -16,23 +16,23 @@ func setupRoutes(r *mux.Router) {
 	r.HandleFunc("/", uploadRoute).Methods("POST")
 
 	// Static aliased HTML files
-	r.HandleFunc("/", advancedStaticRoute(config.frontendPath, "/index.html", routeOptions{
+	r.HandleFunc("/", advancedStaticRoute(config.FrontendPath, "/index.html", routeOptions{
 		ignoreExceptions: true,
 		modifySource: func(body *string) {
 			replaceBlockVariable(body, "if_fork", false)
 		},
 	})).Methods("GET")
-	r.HandleFunc("/guidelines", staticRoute(config.frontendPath, "/guidelines.html", true)).Methods("GET")
+	r.HandleFunc("/guidelines", staticRoute(config.FrontendPath, "/guidelines.html", true)).Methods("GET")
 
 	// Static files
-	qbin.Log.Debugf("Including static files from: %s", config.frontendPath)
-	addStaticDirectory(config.frontendPath, "/", r)
+	qbin.Log.Debugf("Including static files from: %s", config.FrontendPath)
+	addStaticDirectory(config.FrontendPath, "/", r)
 
 	// Documents
 	r.HandleFunc("/{document}", documentRoute()).Methods("GET")
 	r.HandleFunc("/{document}/raw", rawDocumentRoute).Methods("GET")
 	r.HandleFunc("/{document}/fork", forkDocumentRoute()).Methods("GET")
-	r.HandleFunc("/{document}/report", advancedStaticRoute(config.frontendPath, "/report.html", routeOptions{
+	r.HandleFunc("/{document}/report", advancedStaticRoute(config.FrontendPath, "/report.html", routeOptions{
 		ignoreExceptions: true,
 		modifyResult: func(res http.ResponseWriter, req *http.Request, body *string) error {
 			replaceVariable(body, "id", strings.TrimSuffix(strings.TrimPrefix(req.URL.Path, "/"), "/report"))
@@ -55,7 +55,7 @@ func rawDocumentRoute(res http.ResponseWriter, req *http.Request) {
 }
 
 func documentRoute() func(http.ResponseWriter, *http.Request) {
-	return advancedStaticRoute(config.frontendPath, "/output.html", routeOptions{
+	return advancedStaticRoute(config.FrontendPath, "/output.html", routeOptions{
 		ignoreExceptions: true,
 		modifyResult: func(res http.ResponseWriter, req *http.Request, body *string) error {
 			// TODO: Check for curl/wget requests and return raw document
@@ -80,7 +80,7 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 }
 
 func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
-	return advancedStaticRoute(config.frontendPath, "/index.html", routeOptions{
+	return advancedStaticRoute(config.FrontendPath, "/index.html", routeOptions{
 		ignoreExceptions: true,
 		modifySource: func(body *string) {
 			replaceBlockVariable(body, "if_fork", true)

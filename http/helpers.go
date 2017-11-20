@@ -16,8 +16,8 @@ func escapeHTML(content string) string {
 
 // replaceGlobal replaces all global frontend variables with their config value.
 func replaceGlobal(content *string) {
-	replaceVariable(content, "path", config.path)
-	replaceVariable(content, "root", config.root)
+	replaceVariable(content, "path", config.Path)
+	replaceVariable(content, "root", config.Root)
 }
 
 // replaceVariable replaces a single frontend variable with its value.

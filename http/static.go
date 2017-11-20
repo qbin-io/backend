@@ -65,7 +65,7 @@ func advancedStaticRoute(webroot string, path string, options routeOptions) func
 
 // staticRoute adds a route to a static file
 func staticRoute(webroot string, path string, ignoreExceptions bool) func(http.ResponseWriter, *http.Request) {
-	return advancedStaticRoute(webroot, path, routeOptions{ignoreExceptions: false})
+	return advancedStaticRoute(webroot, path, routeOptions{ignoreExceptions: ignoreExceptions})
 }
 
 // addStaticDirectory traverses a directory and adds its files as static routes to a mux Router.

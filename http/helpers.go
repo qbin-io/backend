@@ -7,14 +7,10 @@ import (
 
 // escapeHTML removes all special HTML characters (namely, &<>") in a string and replaces them with their entities (e.g. &amp;).
 func escapeHTML(content string) string {
-	for character, entity := range map[string]string{
-		"&":  "&amp;",
-		"<":  "&lt;",
-		">":  "&gt;",
-		"\"": "&quot;",
-	} {
-		content = strings.Replace(content, character, entity, -1)
-	}
+	content = strings.Replace(content, "&", "&amp;", -1)
+	content = strings.Replace(content, "<", "&lt;", -1)
+	content = strings.Replace(content, ">", "&gt;", -1)
+	content = strings.Replace(content, "\"", "&quot;", -1)
 	return content
 }
 

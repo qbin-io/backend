@@ -46,7 +46,7 @@ func initializeConfig(initialConfig Configuration) {
 	if len(rootParts) > 3 { // Otherwise: application in root folder
 		config.path = rootParts[3]
 	}
-	config.path = "/" + strings.TrimPrefix(strings.TrimSuffix(config.path, "/"), "/")
+	config.path = strings.TrimSuffix("/"+strings.TrimPrefix(config.path, "/"), "/")
 
 	config.domain = strings.Split(strings.TrimPrefix(strings.ToLower(config.Root), "https://"), "/")[0]
 }

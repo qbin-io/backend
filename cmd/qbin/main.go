@@ -33,6 +33,15 @@ var flags = []cli.Flag{
 	cli.StringFlag{
 		Name: "https", EnvVar: "HTTPS_LISTEN", Value: "none",
 		Usage: "HTTPS listen address, qbin will automatically get a Let's Encrypt certificate. Set to 'none' to disable."},
+	cli.BoolFlag{
+		Name:  "hsts",
+		Usage: "Send HSTS header with max-age=31536000 (1 year)."},
+	cli.BoolFlag{
+		Name:  "hsts-preload",
+		Usage: "Send preload directive with the HSTS header. Requires --hsts."},
+	cli.BoolFlag{
+		Name:  "hsts-subdomains",
+		Usage: "Send includeSubDomains directive with the HSTS header. Requires --hsts."},
 	cli.StringFlag{
 		Name: "frontend-path, p", EnvVar: "FRONTEND_PATH", Value: "./frontend",
 		Usage: "Location of the frontend files."},
@@ -85,6 +94,21 @@ func run(c *cli.Context) error {
 
 	// Serve HTTP
 	if c.String("http") != "none" || c.String("https") != "none" {
+		hsts := ""
+		if c.String("https") == "none" && c.Bool("hsts") {
+			qbin.Log.Warning("You are using --hsts without --https. Ignoring and keeping HSTS off.")
+		} else if c.Bool("hsts") {
+			hsts = "max-age=31536000"
+			if c.Bool("hsts-subdomains") {
+				hsts += "; includeSubDomains"
+			}
+			if c.Bool("hsts-preload") {
+				hsts += "; preload"
+			}
+		} else if c.Bool("hsts-subdomains") || c.Bool("hsts-preload") {
+			qbin.Log.Warning("You are using --hsts-subdomains or --hsts-preload without --hsts. Ignoring and keeping HSTS off.")
+		}
+
 		go qbinHTTP.StartHTTP(qbinHTTP.Configuration{
 			ListenHTTP:    c.String("http"),
 			ListenHTTPS:   c.String("https"),
@@ -92,6 +116,7 @@ func run(c *cli.Context) error {
 			Root:          c.String("root"),
 			CertWhitelist: c.Args(),
 			ForceRoot:     c.Bool("force-root"),
+			Hsts:          hsts,
 		})
 	}
 

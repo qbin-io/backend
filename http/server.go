@@ -23,6 +23,7 @@ type Configuration struct {
 	domain        string
 	CertWhitelist []string
 	ForceRoot     bool
+	Hsts          string
 }
 
 var config Configuration
@@ -67,6 +68,10 @@ func StartHTTP(initialConfig Configuration) {
 	// Add important headers
 	n.UseHandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Server", "qbin")
+		res.Header().Add("X-Content-Type", "nosniff") // We're not a CDN.
+		if config.Hsts != "" {
+			res.Header().Add("Strict-Transport-Security", config.Hsts)
+		}
 	})
 	// Redirect to root
 	if config.ForceRoot {

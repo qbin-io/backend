@@ -13,7 +13,7 @@ import (
 
 var flags = []cli.Flag{
 	cli.StringFlag{
-		Name: "database, d", EnvVar: "DATABASE", Value: "root:@/qbin",
+		Name: "database, d", EnvVar: "DATABASE", Value: "root:@tcp(localhost)/qbin",
 		Usage: "MySQL/MariaDB connection string. It is recommended to pass this parameter as an environment variable."},
 	cli.StringFlag{
 		Name: "root, r", EnvVar: "ROOT_URL", Value: "http://127.0.0.1:8000",

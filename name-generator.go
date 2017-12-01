@@ -2,6 +2,7 @@ package qbin
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"errors"
 	"io/ioutil"
 	"math/big"
@@ -64,4 +65,30 @@ func GenerateName() string {
 	}
 
 	return strings.TrimPrefix(text, "-")
+}
+
+var safeName *sql.Stmt
+var errSafeName = errors.New("not initialized")
+
+// GenerateSafeName generates a slug (like GenerateName()) that doesn't exist in the database yet.
+func GenerateSafeName() (string, error) {
+	if errSafeName != nil {
+		return "", errSafeName
+	}
+
+	name := ""
+	rows := 1
+
+	for rows > 0 {
+		name = GenerateName()
+		if name == "" {
+			return "", errors.New("name generation failed")
+		}
+		err := safeName.QueryRow(name).Scan(&rows)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return name, nil
 }

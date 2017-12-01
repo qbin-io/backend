@@ -45,6 +45,8 @@ func Connect(uri string) error {
 		Log.Noticef("Created table `documents`. Database setup completed.")
 	}
 
+	safeName, errSafeName = db.Prepare("SELECT COUNT(id) FROM documents WHERE id = ?")
+
 	isConnected = true
 	return nil
 }

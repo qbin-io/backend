@@ -40,10 +40,9 @@ func Store(document *Document) error {
 	if document.Syntax == "none" {
 		document.Syntax = ""
 	}
-	if document.Syntax == "" {
-		content = EscapeHTML(document.Content)
-	} else {
-		content = EscapeHTML(document.Content)
+	content, err = Highlight(document.Content, document.Syntax)
+	if err != nil {
+		Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
 	}
 
 	// Write the document to the database

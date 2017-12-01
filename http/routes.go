@@ -13,7 +13,7 @@ import (
 // setupRoutes will set up a mux Router to provide the routes used by the qbin frontend and API.
 func setupRoutes(r *mux.Router) {
 	// Upload function
-	r.HandleFunc("/", uploadRoute).Methods("POST")
+	r.HandleFunc("/", uploadRoute).Methods("POST", "PUT")
 
 	// Static aliased HTML files
 	r.HandleFunc("/", advancedStaticRoute(config.FrontendPath, "/index.html", routeOptions{
@@ -42,11 +42,6 @@ func setupRoutes(r *mux.Router) {
 
 	// 404 error page
 	r.PathPrefix("/").HandlerFunc(notFoundRoute)
-}
-
-func uploadRoute(res http.ResponseWriter, req *http.Request) {
-	// TODO: Upload document
-	fmt.Fprintf(res, "Welcome to the upload page!")
 }
 
 func rawDocumentRoute(res http.ResponseWriter, req *http.Request) {

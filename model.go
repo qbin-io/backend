@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const MaxFilesize = 1024*1024 + 1024*10 // 1MB + 10KB for metadata
+
 // Document specifies the content and metadata of a piece of code that is hosted on qbin.
 type Document struct {
 	// ID is set on Store()

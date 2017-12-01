@@ -5,15 +5,6 @@ import (
 	"strings"
 )
 
-// escapeHTML removes all special HTML characters (namely, &<>") in a string and replaces them with their entities (e.g. &amp;).
-func escapeHTML(content string) string {
-	content = strings.Replace(content, "&", "&amp;", -1)
-	content = strings.Replace(content, "<", "&lt;", -1)
-	content = strings.Replace(content, ">", "&gt;", -1)
-	content = strings.Replace(content, "\"", "&quot;", -1)
-	return content
-}
-
 // replaceGlobal replaces all global frontend variables with their config value.
 func replaceGlobal(content *string) {
 	replaceVariable(content, "path", config.path)

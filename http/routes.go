@@ -66,7 +66,7 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 			}
 
 			content := `console.log("Hello <World>");` + "\n"
-			content = `<pre class="no-linenumber-padding"><code class="language-javascript line-numbers">` + escapeHTML(content) + `</code></pre>`
+			content = `<pre class="no-linenumber-padding"><code class="language-javascript line-numbers">` + content + `</code></pre>`
 			replaceVariable(body, "id", strings.TrimSuffix(strings.TrimPrefix(req.URL.Path, "/"), "/fork"))
 			replaceVariable(body, "syntax", "javascript")
 			replaceVariable(body, "creation", "2017-01-01 12:34 (UTC)")
@@ -92,7 +92,7 @@ func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 			replaceVariable(body, "creation", "2017-01-01 12:34 (UTC)")
 			replaceVariable(body, "expiration", "2017-05-01 12:34 (UTC)")
 			replaceVariable(body, "expiration-remaining", "2 days left")
-			replaceVariable(body, "content", escapeHTML(content))
+			replaceVariable(body, "content", content)
 
 			return nil
 		},

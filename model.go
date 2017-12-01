@@ -1,6 +1,7 @@
 package qbin
 
 import (
+	"strings"
 	"time"
 )
 
@@ -27,17 +28,22 @@ func Store(document *Document) error {
 	}
 	document.ID = name
 
+	// Round the timestamps on the object. Won't affect the database, but we want consistency.
 	document.Upload = time.Now().Round(time.Second)
 	document.Expiration = document.Expiration.Round(time.Second)
 
+	// Make sure there's a new line at the end.
+	document.Content = strings.TrimSuffix(document.Content, "\n") + "\n"
+
 	var content string
+	// Consistency is power!
 	if document.Syntax == "none" {
 		document.Syntax = ""
 	}
-	if document.Syntax != "" {
-		// TODO: Highlight
+	if document.Syntax == "" {
+		content = EscapeHTML(document.Content)
 	} else {
-		content = escapeHTML(document.Content)
+		content = EscapeHTML(document.Content)
 	}
 
 	// Write the document to the database
@@ -69,7 +75,7 @@ func Request(id string, raw bool) (Document, error) {
 	doc.Expiration = time.Unix(expiration, 0)
 
 	if raw {
-		doc.Content = stripHTML(doc.Content)
+		doc.Content = StripHTML(doc.Content)
 	}
 	return doc, err
 }

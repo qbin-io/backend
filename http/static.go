@@ -46,16 +46,17 @@ func advancedStaticRoute(webroot string, path string, options routeOptions) func
 
 		mimeType := mime.TypeByExtension(filepath.Ext(path))
 		return func(res http.ResponseWriter, req *http.Request) {
+			instanceBody := "" + body
 			// Manipulate on each request
 			if options.modifyResult != nil {
-				err = options.modifyResult(res, req, &body)
+				err = options.modifyResult(res, req, &instanceBody)
 				if err != nil {
 					return
 				}
 			}
 
 			res.Header().Add("Content-Type", mimeType+"; charset=utf-8")
-			fmt.Fprintf(res, "%s", body)
+			fmt.Fprintf(res, "%s", instanceBody)
 		}
 	}
 

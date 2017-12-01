@@ -37,8 +37,8 @@ func ParseExpiration(expiration string) (time.Time, error) {
 	return expirationTime, nil
 }
 
-// escapeHTML removes all special HTML characters (namely, &<>") in a string and replaces them with their entities (e.g. &amp;).
-func escapeHTML(content string) string {
+// EscapeHTML removes all special HTML characters (namely, &<>") in a string and replaces them with their entities (e.g. &amp;).
+func EscapeHTML(content string) string {
 	content = strings.Replace(content, "&", "&amp;", -1)
 	content = strings.Replace(content, "<", "&lt;", -1)
 	content = strings.Replace(content, ">", "&gt;", -1)
@@ -49,8 +49,8 @@ func escapeHTML(content string) string {
 // This does not match all HTML tags, but those created by Prism.js are fine for us.
 var htmlTags = regexp.MustCompile(`<[^>]+>`)
 
-// stripHTML strips all HTML tags and replaces the entities from escapeHTML backwards.
-func stripHTML(content string) string {
+// StripHTML strips all HTML tags and replaces the entities from escapeHTML backwards.
+func StripHTML(content string) string {
 	content = htmlTags.ReplaceAllString(content, "")
 	content = strings.Replace(content, "&quot;", "\"", -1)
 	content = strings.Replace(content, "&gt;", ">", -1)

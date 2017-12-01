@@ -45,8 +45,14 @@ func setupRoutes(r *mux.Router) {
 }
 
 func rawDocumentRoute(res http.ResponseWriter, req *http.Request) {
-	// TODO: Get raw content
-	fmt.Fprintf(res, `console.log("Hello <World>");`+"\n")
+	id := strings.Split(req.URL.Path, "/")
+	doc, err := qbin.Request(id[len(id)-2], true)
+	if err != nil {
+		notFoundRoute(res, req)
+	}
+
+	res.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprintf(res, "%s", doc.Content)
 }
 
 func documentRoute() func(http.ResponseWriter, *http.Request) {
@@ -57,17 +63,19 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 			if false {
 				// Does this work?!
 				rawDocumentRoute(res, req)
-				return errors.New("Serving for curl")
+				return errors.New("serving for curl")
 			}
 
-			content := `console.log("Hello <World>");` + "\n"
-			content = `<pre class="no-linenumber-padding"><code class="language-javascript line-numbers">` + content + `</code></pre>`
-			replaceVariable(body, "id", strings.TrimSuffix(strings.TrimPrefix(req.URL.Path, "/"), "/fork"))
-			replaceVariable(body, "syntax", "javascript")
-			replaceVariable(body, "creation", "2017-01-01 12:34 (UTC)")
-			replaceVariable(body, "expiration", "2017-05-01 12:34 (UTC)")
-			replaceVariable(body, "expiration-remaining", "2 days left")
+			id := strings.Split(req.URL.Path, "/")
+			doc, err := qbin.Request(id[len(id)-1], false)
+			if err != nil {
+				notFoundRoute(res, req)
+				return errors.New("not found")
+			}
+
+			content := `<pre class="no-linenumber-padding"><code class="language-javascript line-numbers">` + doc.Content + `</code></pre>`
 			replaceVariable(body, "content", content)
+			replaceDocumentVariables(body, &doc)
 
 			return nil
 		},
@@ -81,13 +89,15 @@ func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 			replaceBlockVariable(body, "if_fork", true)
 		},
 		modifyResult: func(res http.ResponseWriter, req *http.Request, body *string) error {
-			content := `console.log("Hello <World>");` + "\n"
-			replaceVariable(body, "id", strings.TrimSuffix(strings.TrimPrefix(req.URL.Path, "/"), "/fork"))
-			replaceVariable(body, "syntax", "javascript")
-			replaceVariable(body, "creation", "2017-01-01 12:34 (UTC)")
-			replaceVariable(body, "expiration", "2017-05-01 12:34 (UTC)")
-			replaceVariable(body, "expiration-remaining", "2 days left")
-			replaceVariable(body, "content", content)
+			id := strings.Split(req.URL.Path, "/")
+			doc, err := qbin.Request(id[len(id)-2], false)
+			if err != nil {
+				notFoundRoute(res, req)
+				return errors.New("not found")
+			}
+
+			replaceVariable(body, "content", qbin.EscapeHTML(doc.Content))
+			replaceDocumentVariables(body, &doc)
 
 			return nil
 		},

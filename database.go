@@ -2,6 +2,7 @@ package qbin
 
 import (
 	"database/sql"
+	"time"
 	// MySQL/MariaDB Database Driver
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -12,15 +13,19 @@ var isConnected bool
 // Connect tries to establish a connection to a MySQL/MariaDB database under the given URI and initializes the qbin tables if they don't exist yet.
 func Connect(uri string) error {
 	Log.Noticef("Connecting to database at %s", uri)
-	var err error
-	db, err = sql.Open("mysql", uri)
+	result, err := try(func() (interface{}, error) {
+		return sql.Open("mysql", uri)
+	}, 10, time.Second) // Wait up to 10 seconds for the database
 	if err != nil {
 		return err
 	}
+	db = result.(*sql.DB)
 
 	// Print database version
 	var version string
-	err = db.QueryRow("SELECT VERSION()").Scan(&version)
+	_, err = try(func() (interface{}, error) {
+		return nil, db.QueryRow("SELECT VERSION()").Scan(&version)
+	}, 10, time.Second) // Wait up to 10 seconds for the database
 	if err != nil {
 		return err
 	}

@@ -91,7 +91,7 @@ func formatTime(t time.Time, relative bool) string {
 			v := seconds / (60)
 			return strconv.Itoa(v) + " minute" + iif(v == 1, "", "s").(string) + " " + context
 		}
-		return "seconds ago"
+		return "a few seconds " + context
 	}
 	return t.UTC().Format("2006-01-02 15:04 (UTC)")
 }

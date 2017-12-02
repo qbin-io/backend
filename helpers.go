@@ -31,8 +31,7 @@ func ParseExpiration(expiration string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	expirationTime := time.Now()
-	expirationTime.Add(time.Duration(multiplier*value) * time.Minute)
+	expirationTime := time.Now().Add(time.Duration(multiplier*value) * time.Minute)
 
 	return expirationTime, nil
 }

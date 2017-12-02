@@ -101,6 +101,13 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Don't accept binary files
+	if strings.Contains(doc.Content, "\x00") {
+		res.WriteHeader(400)
+		fmt.Fprintf(res, "You are trying to upload a binary file, which is not supported.\n")
+		return
+	}
+
 	// Read metadata
 	if req.Header.Get("S") != "" {
 		doc.Syntax = req.Header.Get("S")

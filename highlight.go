@@ -40,7 +40,10 @@ func Highlight(content string, language string) (string, error) {
 	conn.Close()
 
 	ln := `<span class="line-number"></span>`
-	return ln + strings.Trim(strings.Replace(string(result), "\n", "\n"+ln, -1), "\x00"), nil
+	// Don't ask where that 0x00 byte is coming from.
+	// They are following me, and my code is haunted by them.
+	// I guess it's just the closing character from the transmission though.
+	return ln + strings.Replace(strings.TrimSuffix(string(result), "\x00"), "\n", "\n"+ln, -1), nil
 }
 
 // SyntaxExists checks if a given syntax definition exists in Prism.js.

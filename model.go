@@ -1,6 +1,7 @@
 package qbin
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
@@ -34,6 +35,11 @@ func Store(document *Document) error {
 
 	// Normalize new lines
 	document.Content = strings.Trim(strings.Replace(strings.Replace(document.Content, "\r\n", "\n", -1), "\r", "\n", -1), "\n") + "\n"
+
+	// Don't accept binary files
+	if strings.Contains(document.Content, "\x00") {
+		return errors.New("file contains 0x00 bytes")
+	}
 
 	var content string
 	// Consistency is power!

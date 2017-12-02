@@ -90,7 +90,7 @@ func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 		},
 		modifyResult: func(res http.ResponseWriter, req *http.Request, body *string) error {
 			id := strings.Split(req.URL.Path, "/")
-			doc, err := qbin.Request(id[len(id)-2], false)
+			doc, err := qbin.Request(id[len(id)-2], true)
 			if err != nil {
 				notFoundRoute(res, req)
 				return errors.New("not found")

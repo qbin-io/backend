@@ -96,7 +96,7 @@ func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 				return errors.New("not found")
 			}
 
-			replaceVariable(body, "content", qbin.EscapeHTML(doc.Content))
+			replaceVariable(body, "content", qbin.EscapeHTML(strings.TrimSuffix(doc.Content, "\n")))
 			replaceDocumentVariables(body, &doc)
 
 			return nil

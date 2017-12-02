@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const MaxFilesize = 1024*1024 + 1024*10 // 1MB + 10KB for metadata
+const MaxFilesize = 1024 * 1024 // 1MB
 
 // Document specifies the content and metadata of a piece of code that is hosted on qbin.
 type Document struct {

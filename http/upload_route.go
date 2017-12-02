@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	qbin "github.com/qbin-io/backend"
+	"github.com/qbin-io/backend"
 )
 
 func uploadError(during string, err error, res http.ResponseWriter, req *http.Request) bool {
@@ -24,61 +24,73 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 	doc := qbin.Document{Address: req.RemoteAddr}
 	exp := "14d"
 	redirect := false
+	sizeExceeded := false
 
 	// Parse form and get content
-	// TODO: custom error message for huge bodies
-	req.Body = http.MaxBytesReader(res, req.Body, qbin.MaxFilesize)
+	req.Body = http.MaxBytesReader(res, req.Body, qbin.MaxFilesize+1024) // MaxFilesize + 1KB metadata
 	contentType := strings.Split(strings.Replace(strings.ToLower(req.Header.Get("Content-Type")), " ", "", -1), ";")[0]
 
 	// Get the document, however the request is formatted
 	if req.Method == "POST" && contentType == "application/x-www-form-urlencoded" {
 		// Parse form
 		err = req.ParseForm()
-		if uploadError("req.ParseForm()", err, res, req) {
+		if err != nil && err.Error() == "http: request body too large" {
+			sizeExceeded = true
+		} else if uploadError("req.ParseForm()", err, res, req) {
 			return
-		}
+		} else {
 
-		// Get document
-		doc.Content = req.PostFormValue("Q")
+			// Get document
+			doc.Content = req.PostFormValue("Q")
+
+		}
 	} else if req.Method == "POST" && contentType == "multipart/form-data" {
 		// Parse form
-		err = req.ParseMultipartForm(qbin.MaxFilesize)
-		if uploadError("req.ParseMultipartForm()", err, res, req) {
+		err = req.ParseMultipartForm(qbin.MaxFilesize + 1024)
+		if err != nil && err.Error() == "http: request body too large" {
+			sizeExceeded = true
+		} else if uploadError("req.ParseMultipartForm()", err, res, req) {
 			return
-		}
+		} else {
 
-		// Get document
-		doc.Content = req.PostFormValue("Q")
-		if doc.Content == "" { // Oh no, it's a file!
-			// Get file
-			file, _, err := req.FormFile("Q")
-			if err != nil && err.Error() == "http: no such file" {
-				res.WriteHeader(400)
-				fmt.Fprintf(res, "The document can't be empty.\n")
-				return
-			} else if uploadError("req.FormFile()", err, res, req) {
-				return
+			// Get document
+			doc.Content = req.PostFormValue("Q")
+			if doc.Content == "" { // Oh no, it's a file!
+				// Get file
+				file, _, err := req.FormFile("Q")
+				if err != nil && err.Error() == "http: no such file" {
+					res.WriteHeader(400)
+					fmt.Fprintf(res, "The document can't be empty.\n")
+					return
+				} else if uploadError("req.FormFile()", err, res, req) {
+					return
+				}
+
+				// Read document
+				content, err := ioutil.ReadAll(file)
+				if uploadError("ioutil.ReadAll()", err, res, req) {
+					return
+				}
+				doc.Content = string(content)
 			}
 
-			// Read document
-			content, err := ioutil.ReadAll(file)
-			if uploadError("ioutil.ReadAll()", err, res, req) {
-				return
-			}
-			doc.Content = string(content)
 		}
 	} else { // PUT or POST with non-form
-		// TODO: test for huge bodies!
 		// Read document
 		content, err := ioutil.ReadAll(req.Body)
-		if uploadError("ioutil.ReadAll()", err, res, req) {
+		if err != nil && err.Error() == "http: request body too large" {
+			sizeExceeded = true
+		} else if uploadError("ioutil.ReadAll()", err, res, req) {
 			return
+		} else {
+
+			doc.Content = string(content)
+
 		}
-		doc.Content = string(content)
 	}
 
 	// Check exact filesize
-	if len(doc.Content) > qbin.MaxFilesize {
+	if sizeExceeded || len(doc.Content) > qbin.MaxFilesize {
 		res.WriteHeader(413)
 		fmt.Fprintf(res, "Maximum document size exceeded.\n")
 		return
@@ -118,7 +130,6 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO: Store
 	err = qbin.Store(&doc)
 	if uploadError("qbin.Store()", err, res, req) {
 		return

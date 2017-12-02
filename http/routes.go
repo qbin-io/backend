@@ -107,11 +107,11 @@ func forkDocumentRoute() func(http.ResponseWriter, *http.Request) {
 func internalErrorRoute(res http.ResponseWriter, req *http.Request) {
 	res.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(500)
-	fmt.Fprint(res, "Oh no, the server is broken! ಠ_ಠ\nYou should try again in a few minutes, there's probably a desperate admin running around somewhere already trying to fix it.")
+	fmt.Fprint(res, "Oh no, the server is broken! ಠ_ಠ\nYou should try again in a few minutes, there's probably a desperate admin running around somewhere already trying to fix it.\n")
 }
 
 func notFoundRoute(res http.ResponseWriter, req *http.Request) {
 	res.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(404)
-	fmt.Fprint(res, "Oops, seems like there's nothing here! ¯\\_(ツ)_/¯\nMaybe the document is expired or has been removed.")
+	fmt.Fprint(res, "Oops, seems like there's nothing here! ¯\\_(ツ)_/¯\nMaybe the document is expired or has been removed.\n")
 }

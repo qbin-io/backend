@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	qbin "github.com/qbin-io/backend"
+	"github.com/qbin-io/backend"
 )
 
 // replaceGlobal replaces all global frontend variables with their config value.

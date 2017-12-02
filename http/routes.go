@@ -14,6 +14,7 @@ import (
 func setupRoutes(r *mux.Router) {
 	// Upload function
 	r.HandleFunc("/", uploadRoute).Methods("POST", "PUT")
+	r.Methods("PUT").HandlerFunc(uploadRoute)
 
 	// Static aliased HTML files
 	r.HandleFunc("/", advancedStaticRoute(config.FrontendPath, "/index.html", routeOptions{

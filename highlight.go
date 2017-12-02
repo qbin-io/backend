@@ -40,7 +40,7 @@ func Highlight(content string, language string) (string, error) {
 	conn.Close()
 
 	ln := `<span class="line-number"></span>`
-	return ln + strings.Replace(string(result), "\n", "\n"+ln, -1), nil
+	return ln + strings.Trim(strings.Replace(string(result), "\n", "\n"+ln, -1), "\x00"), nil
 }
 
 // SyntaxExists checks if a given syntax definition exists in Prism.js.
@@ -52,6 +52,8 @@ func SyntaxExists(language string) bool {
 func ParseSyntax(language string) string {
 	language = strings.TrimSpace(strings.ToLower(language))
 	switch language {
+	case "none":
+		return ""
 	case "apache":
 		return "apacheconf"
 	case "c++":

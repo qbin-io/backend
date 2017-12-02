@@ -32,8 +32,8 @@ func Store(document *Document) error {
 	document.Upload = time.Now().Round(time.Second)
 	document.Expiration = document.Expiration.Round(time.Second)
 
-	// Make sure there's a new line at the end.
-	document.Content = strings.TrimSuffix(document.Content, "\n") + "\n"
+	// Normalize new lines
+	document.Content = strings.Trim(strings.Replace(strings.Replace(document.Content, "\r\n", "\n", -1), "\r", "\n", -1), "\n") + "\n"
 
 	var content string
 	// Consistency is power!
@@ -44,6 +44,8 @@ func Store(document *Document) error {
 	if err != nil {
 		Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
 	}
+
+	// TODO: autolinker
 
 	// Write the document to the database
 	_, err = db.Exec(
@@ -74,7 +76,7 @@ func Request(id string, raw bool) (Document, error) {
 	doc.Expiration = time.Unix(expiration, 0)
 
 	if raw {
-		doc.Content = StripHTML(doc.Content)
+		doc.Content = StripHTML(doc.Content) + "\n"
 	}
 	return doc, err
 }

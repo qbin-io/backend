@@ -53,14 +53,25 @@ func handleClient(connTCP net.Conn) {
 			qbin.Log.Error("TCP Read Error:", err.Error())
 			break
 		}
-		//length = 0 -> user already closed connection
-		if msgLength == 0 {
-			break
-		} else {
-			qbin.Log.Notice("You recived something via TCP")
-		}
+
+		msg := string(request[:msgLength])
+		qbin.Log.Notice(msgLength)
+		qbin.Log.Notice(len(msg))
+		handleMsgProcessing(connTCP, msg)
 
 		connTCP.Close()
 		break
 	}
+}
+
+func handleMsgProcessing(connTCP net.Conn, msg string) {
+	//length = 0 -> user already closed connection
+	if len(msg) == 0 {
+		return
+	}
+	//there is a msg, so we process it
+	qbin.Log.Notice("You recived something via TCP")
+	qbin.Log.Notice(msg)
+	connTCP.Write([]byte("We got your message \n"))
+
 }

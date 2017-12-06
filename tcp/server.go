@@ -7,19 +7,22 @@ import (
 	"github.com/qbin-io/backend"
 )
 
+var froot string
+
 // StartTCP launches the TCP server which is responsible for the TCP API.
 //listen <- given tcp port
 func StartTCP(listen string, root string) {
-	qbin.Log.Warning("TCP server is work in Progess")
+	froot = root
 
-	//reading server TCP-Adress and printing to log
+	//reading server TCP-Address
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", listen)
 	checkErr(err)
-	qbin.Log.Noticef("TCP listener on Port %s.", tcpAddr)
 
-	//starting listener on previously mentiond port
+	//starting listener on TCP-Address
 	listenerTCP, err := net.ListenTCP("tcp", tcpAddr) //not sure why to use tcpAddr instead of listen
 	checkErr(err)
+
+	qbin.Log.Noticef("TCP server starting on %s, you should be able to reach it at %s", listen, froot)
 
 	//waiting for incoming connections
 	for {
@@ -36,27 +39,25 @@ func StartTCP(listen string, root string) {
 //log Error if one occures
 func checkErr(err error) {
 	if err != nil {
-		qbin.Log.Error("TCP Server Error: ", err.Error())
+		qbin.Log.Errorf("TCP Server Error: %s", err.Error())
 	}
 }
 
 //handle incomming TCP Connection
 func handleClient(connTCP net.Conn) {
-	//set timeout, limit requestlength to 128B, close connection on close
+	//set timeout to 2 minutes, limit requestlength to 1MB, close connection on programm close
 	connTCP.SetReadDeadline(time.Now().Add(2 * time.Minute))
-	request := make([]byte, 128)
+	request := make([]byte, 1024)
 	defer connTCP.Close()
 
 	for {
 		msgLength, err := connTCP.Read(request)
 		if err != nil {
-			qbin.Log.Error("TCP Read Error:", err.Error())
+			qbin.Log.Errorf("TCP Read Error: %s", err.Error())
 			break
 		}
 
 		msg := string(request[:msgLength])
-		qbin.Log.Notice(msgLength)
-		qbin.Log.Notice(len(msg))
 		handleMsgProcessing(connTCP, msg)
 
 		connTCP.Close()
@@ -70,8 +71,24 @@ func handleMsgProcessing(connTCP net.Conn, msg string) {
 		return
 	}
 	//there is a msg, so we process it
-	qbin.Log.Notice("You recived something via TCP")
-	qbin.Log.Notice(msg)
-	connTCP.Write([]byte("We got your message \n"))
+	//sendIP := connTCP.RemoteAddr().String
+	//qbin.Log.Notice("You received something via TCP")
+	//qbin.Log.Notice(msg)
 
+	exp, err := qbin.ParseExpiration("14d")
+	checkErr(err)
+
+	doc := qbin.Document{
+		Content:    msg,
+		Syntax:     "",
+		Expiration: exp,
+		Address:    "::ffff:127.0.0.1",
+	}
+
+	err = qbin.Store(&doc)
+	checkErr(err) //Todo: User err msg
+
+	reply := froot + "/" + doc.ID + "\n"
+
+	connTCP.Write([]byte(reply))
 }

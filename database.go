@@ -40,9 +40,10 @@ func Connect(uri string) error {
             id varchar(30) PRIMARY KEY,
             content longtext NOT NULL,
             syntax varchar(30) NOT NULL DEFAULT "",
-            upload timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            expiration timestamp NULL,
-            address varchar(45) NOT NULL
+            upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            expiration datetime NULL DEFAULT NULL,
+            address varchar(45) NOT NULL,
+            views int UNSIGNED NOT NULL DEFAULT 0
         )`).Scan()
 		if err != nil && err.Error() != "sql: no rows in result set" {
 			return err
@@ -63,7 +64,7 @@ func IsConnected() bool {
 }
 
 func cleanup() {
-	stmt, err := db.Prepare("DELETE FROM documents WHERE expiration < CURRENT_TIMESTAMP")
+	stmt, err := db.Prepare("DELETE FROM documents WHERE expiration < CURRENT_TIMESTAMP AND expiration > FROM_UNIXTIME(0)")
 	if err != nil {
 		Log.Errorf("Couldn't initialize cleanup statement: %s", err)
 		return

@@ -9,7 +9,11 @@ import (
 
 // ParseExpiration creates a time.Time object from an expiration string, taking the units m, h, d, w into account.
 func ParseExpiration(expiration string) (time.Time, error) {
-	expiration = strings.TrimSpace(expiration)
+	expiration = strings.ToLower(strings.TrimSpace(expiration))
+	if expiration == "volatile" {
+		return time.Unix(-1, 0), nil
+	}
+
 	var multiplier int64
 
 	if strings.HasSuffix(expiration, "h") {
@@ -29,6 +33,10 @@ func ParseExpiration(expiration string) (time.Time, error) {
 	value, err := strconv.ParseInt(expiration, 10, 0)
 	if err != nil {
 		return time.Time{}, err
+	}
+
+	if multiplier*value == 0 {
+		return time.Time{}, nil
 	}
 
 	expirationTime := time.Now().Add(time.Duration(multiplier*value) * time.Minute)

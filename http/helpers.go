@@ -61,14 +61,28 @@ func replaceDocumentVariables(content *string, doc *qbin.Document) {
 	} else {
 		replaceVariable(content, "syntax", doc.Syntax)
 	}
+	replaceBlockVariable(content, "if_syntax", doc.Syntax != "")
 
 	replaceVariable(content, "creation", formatTime(doc.Upload, false))
 	replaceVariable(content, "expiration", formatTime(doc.Expiration, false))
 	replaceVariable(content, "expiration-remaining", formatTime(doc.Expiration, true))
+
+	replaceVariable(content, "views", strconv.Itoa(doc.Views))
+
+	if (doc.Expiration != time.Time{}) { // Don't store forever?
+		replaceBlockVariable(content, "if_volatile", doc.Expiration.Before(time.Unix(0, 1)))
+	} else {
+		replaceBlockVariable(content, "if_volatile", false)
+	}
+
 }
 
 func formatTime(t time.Time, relative bool) string {
 	if relative {
+		if (t == time.Time{}) {
+			return "never"
+		}
+
 		seconds := int(math.Floor(time.Now().Sub(t).Seconds()))
 		context := "ago"
 		if seconds <= 0 {
@@ -92,6 +106,9 @@ func formatTime(t time.Time, relative bool) string {
 			return strconv.Itoa(v) + " minute" + iif(v == 1, "", "s").(string) + " " + context
 		}
 		return "a few seconds " + context
+	}
+	if (t == time.Time{}) {
+		return ""
 	}
 	return t.UTC().Format("2006-01-02 15:04 (UTC)")
 }

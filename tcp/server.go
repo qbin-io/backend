@@ -100,8 +100,13 @@ func handleMsgProcessing(connTCP net.Conn, msg string, root string) {
 
 	err = qbin.Store(&doc)
 	if err != nil {
-		qbin.Log.Errorf("There was an error storing the TCP input: %s", err)
-		connTCP.Write([]byte("Ups, something went wrong. \n"))
+		if err.Error() == "file contains 0x00 bytes" {
+			qbin.Log.Errorf("There was an error storing the TCP input: %s \nThe uploaded binary file is not supported.\n", err)
+			connTCP.Write([]byte("You are trying to upload a binary file, which is not supported.\n"))
+		} else {
+			qbin.Log.Errorf("There was an error storing the TCP input: %s", err)
+			connTCP.Write([]byte("Ups, something went wrong. \n"))
+		}
 		return
 	}
 

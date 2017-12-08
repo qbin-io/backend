@@ -66,9 +66,9 @@ func handleClient(connTCP net.Conn, root string) {
 	defer connTCP.Close()
 
 	result, err := ioutil.ReadAll(connTCP)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "i/o timeout") {
 		qbin.Log.Errorf("TCP-read error: %s", err)
-		connTCP.Write([]byte("Ups, something went wrong."))
+		connTCP.Write([]byte("Ups, something went wrong. \n"))
 		return
 	}
 	handleMsgProcessing(connTCP, string(result), root)
@@ -79,6 +79,7 @@ func handleMsgProcessing(connTCP net.Conn, msg string, root string) {
 	//length = 0 -> user already closed connection
 	if len(msg) == 0 {
 		qbin.Log.Debug("The TCP message was empty")
+		connTCP.Write([]byte("We received an empty message. \n"))
 		return
 	}
 
@@ -98,7 +99,7 @@ func handleMsgProcessing(connTCP net.Conn, msg string, root string) {
 	err = qbin.Store(&doc)
 	if err != nil {
 		qbin.Log.Errorf("There was an error storing the TCP input: %s", err)
-		connTCP.Write([]byte("Ups, something went wrong."))
+		connTCP.Write([]byte("Ups, something went wrong. \n"))
 		return
 	}
 

@@ -87,6 +87,8 @@ func handleMsgProcessing(connTCP net.Conn, msg string, root string) {
 	exp, err := qbin.ParseExpiration("14d")
 	if err != nil {
 		qbin.Log.Errorf("There was an expiration parsing error: %s", err)
+		connTCP.Write([]byte("Ups, something went wrong.\n"))
+		return
 	}
 
 	doc := qbin.Document{

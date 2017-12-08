@@ -53,10 +53,33 @@ func Connect(uri string) error {
 	safeName, errSafeName = db.Prepare("SELECT COUNT(id) FROM documents WHERE id = ?")
 
 	isConnected = true
+	go cleanup()
 	return nil
 }
 
 // IsConnected returns true if the database has already been initialized.
 func IsConnected() bool {
 	return isConnected
+}
+
+func cleanup() {
+	stmt, err := db.Prepare("DELETE FROM documents WHERE expiration < CURRENT_TIMESTAMP")
+	if err != nil {
+		Log.Errorf("Couldn't initialize cleanup statement: %s", err)
+		return
+	}
+
+	for {
+		result, err := stmt.Exec()
+		if err != nil {
+			Log.Errorf("Couldn't execute cleanup statement: %s", err)
+		} else {
+			n, err := result.RowsAffected()
+			if err == nil && n > 0 {
+				Log.Debugf("Cleaned up %d documents.", n)
+			}
+		}
+
+		time.Sleep(10 * time.Minute)
+	}
 }

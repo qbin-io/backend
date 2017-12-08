@@ -51,8 +51,6 @@ func Store(document *Document) error {
 		Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
 	}
 
-	// TODO: autolinker
-
 	// Write the document to the database
 	_, err = db.Exec(
 		"INSERT INTO documents (id, content, syntax, upload, expiration, address) VALUES (?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), ?)",
@@ -80,6 +78,9 @@ func Request(id string, raw bool) (Document, error) {
 
 	doc.Upload = time.Unix(upload, 0)
 	doc.Expiration = time.Unix(expiration, 0)
+	if time.Now().Unix() > expiration {
+		return Document{}, errors.New("the document has expired")
+	}
 
 	if raw {
 		doc.Content = StripHTML(doc.Content)

@@ -30,7 +30,6 @@ func Store(document *Document) error {
 		return err
 	}
 	document.ID = name
-	document.Views = 0
 
 	// Round the timestamps on the object. Won't affect the database, but we want consistency.
 	document.Upload = time.Now().Round(time.Second)
@@ -61,13 +60,14 @@ func Store(document *Document) error {
 
 	// Write the document to the database
 	_, err = db.Exec(
-		"INSERT INTO documents (id, content, syntax, upload, expiration, address) VALUES (?, ?, ?, ?, ?, ?)",
+		"INSERT INTO documents (id, content, syntax, upload, expiration, address, views) VALUES (?, ?, ?, ?, ?, ?, ?)",
 		document.ID,
 		content,
 		document.Syntax,
 		document.Upload.UTC().Format("2006-01-02 15:04:05"),
 		expiration,
-		document.Address)
+		document.Address,
+		document.Views)
 	if err != nil {
 		return err
 	}

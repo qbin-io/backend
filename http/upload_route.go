@@ -130,6 +130,11 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Volatile documents grant 1 view to the uploader, but the uploaded won't view a document when not redirected
+	if !redirect {
+		doc.Views = 1
+	}
+
 	err = qbin.Store(&doc)
 	if err != nil && err.Error() == "file contains 0x00 bytes" {
 		res.WriteHeader(400)

@@ -82,7 +82,7 @@ func Request(id string, raw bool) (Document, error) {
 	doc.Expiration = time.Unix(expiration, 0)
 
 	if raw {
-		doc.Content = StripHTML(doc.Content) + "\n"
+		doc.Content = StripHTML(doc.Content)
 	}
 	return doc, err
 }

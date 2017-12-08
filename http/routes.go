@@ -46,8 +46,13 @@ func setupRoutes(r *mux.Router) {
 }
 
 func rawDocumentRoute(res http.ResponseWriter, req *http.Request) {
-	id := strings.Split(req.URL.Path, "/")
-	doc, err := qbin.Request(id[len(id)-2], true)
+	path := strings.Split(req.URL.Path, "/")
+	id := path[len(path)-1]
+	if id == "raw" {
+		id = path[len(path)-2]
+	}
+
+	doc, err := qbin.Request(id, true)
 	if err != nil {
 		notFoundRoute(res, req)
 	}
@@ -60,9 +65,9 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 	return advancedStaticRoute(config.FrontendPath, "/output.html", routeOptions{
 		ignoreExceptions: true,
 		modifyResult: func(res http.ResponseWriter, req *http.Request, body *string) error {
-			// TODO: Check for curl/wget requests and return raw document
-			if false {
-				// Does this work?!
+			// Check for curl/wget requests and return raw document
+			ua := strings.ToLower(req.Header.Get("User-Agent"))
+			if ua == "" || strings.HasPrefix(ua, "curl/") || strings.HasPrefix(ua, "wget/") || strings.HasPrefix(ua, "httpie/") || strings.Contains(ua, "windowspowershell/") {
 				rawDocumentRoute(res, req)
 				return errors.New("serving for curl")
 			}

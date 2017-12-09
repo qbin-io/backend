@@ -55,6 +55,8 @@ func Connect(uri string) error {
 
 	isConnected = true
 	go cleanup()
+	// After connecting to the database, connect to prim-server to speed up startup
+	go getLanguages()
 	return nil
 }
 

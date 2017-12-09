@@ -19,11 +19,14 @@ var flags = []cli.Flag{
 		Name: "root, r", EnvVar: "ROOT_URL", Value: "http://127.0.0.1:8000",
 		Usage: "The path under which the application will be reachable from the internet."},
 	cli.BoolFlag{
-		Name:  "force-root",
+		Name: "force-root", EnvVar: "FORCE_ROOT",
 		Usage: "If this is set, requests that are not on the root URI will be redirected."},
 	cli.StringFlag{
 		Name: "wordlist", EnvVar: "WORD_LIST", Value: "eff_large_wordlist.txt",
 		Usage: "Word list used for random slug generation."},
+	cli.StringFlag{
+		Name: "prism-server", EnvVar: "PRISM_SERVER", Value: "/tmp/prism-server.sock",
+		Usage: "TCP address or unix socket path (when containing a /) to prism-server."},
 	cli.StringFlag{
 		Name: "tcp", EnvVar: "TCP_LISTEN", Value: ":9000",
 		Usage: "TCP (netcat API) listen address. Set to 'none' to disable."},
@@ -34,19 +37,19 @@ var flags = []cli.Flag{
 		Name: "https", EnvVar: "HTTPS_LISTEN", Value: "none",
 		Usage: "HTTPS listen address, qbin will automatically get a Let's Encrypt certificate. Set to 'none' to disable."},
 	cli.BoolFlag{
-		Name:  "hsts",
+		Name: "hsts", EnvVar: "HSTS",
 		Usage: "Send HSTS header with max-age=31536000 (1 year)."},
 	cli.BoolFlag{
-		Name:  "hsts-preload",
+		Name: "hsts-preload", EnvVar: "HSTS_PRELOAD",
 		Usage: "Send preload directive with the HSTS header. Requires --hsts."},
 	cli.BoolFlag{
-		Name:  "hsts-subdomains",
+		Name: "hsts-subdomains", EnvVar: "HSTS_SUBDOMAINS",
 		Usage: "Send includeSubDomains directive with the HSTS header. Requires --hsts."},
 	cli.StringFlag{
 		Name: "frontend-path, p", EnvVar: "FRONTEND_PATH", Value: "./frontend",
 		Usage: "Location of the frontend files."},
 	cli.BoolFlag{
-		Name:  "debug",
+		Name: "debug", EnvVar: "DEBUG",
 		Usage: "Show (a lot) more output."},
 	cli.BoolFlag{
 		Name:  "help, h",
@@ -84,6 +87,9 @@ func run(c *cli.Context) error {
 	if err != nil {
 		qbin.Log.Errorf("Error loading word list from '%s': %s", c.String("wordlist"), err)
 	}
+
+	// Setup prism-server
+	qbin.PrismServer = c.String("prism-server")
 
 	// Connect to database
 	err = qbin.Connect(c.String("database"))

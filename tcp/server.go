@@ -1,7 +1,7 @@
 package qbinTCP
 
 import (
-	"io/ioutil"
+	"io"
 	"net"
 	"strings"
 	"time"
@@ -60,18 +60,39 @@ func getTCProot(root string) string {
 //handle incomming TCP Connection
 func handleClient(connTCP net.Conn, root string) {
 	qbin.Log.Debug("Handeling incomming connection...")
-	//set timeout to 5 seconds, limit requestlength to 1MB, close connection on programm close
-	connTCP.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
-	result := make([]byte, 1024)
+	//set timeout to 1.5 seconds, limit requestlength to 1MB, close connection on programm close
 	defer connTCP.Close()
+	msg := ""
 
-	result, err := ioutil.ReadAll(connTCP)
-	if err != nil && !strings.Contains(err.Error(), "i/o timeout") {
-		qbin.Log.Errorf("TCP-read error: %s", err)
-		connTCP.Write([]byte("Ups, something went wrong. \n"))
-		return
+	for {
+		var b = make([]byte, 8)
+		connTCP.SetReadDeadline(time.Now().Add(1500 * time.Millisecond))
+		i, err := connTCP.Read(b)
+		if err != nil && err != io.EOF && !(strings.Contains(err.Error(), "i/o timeout")) {
+			qbin.Log.Errorf("TCP-read error: %s", err)
+			connTCP.Write([]byte("Ups, something went wrong. \n"))
+			return
+		}
+		msg += string(b[:i])
+
+		if len(msg) > qbin.MaxFilesize {
+			qbin.Log.Error("The recived file is to big! refusing connection")
+			connTCP.Write([]byte("Your filesize is over 1M. \n"))
+			return
+		}
+
+		if err != nil && strings.HasSuffix(err.Error(), "i/o timeout") {
+			qbin.Log.Errorf("The connection timed out while reading: %s", err)
+			handleMsgProcessing(connTCP, msg, root)
+			return
+		}
+
+		if err != nil && err == io.EOF {
+			handleMsgProcessing(connTCP, msg, root)
+			return
+		}
+
 	}
-	handleMsgProcessing(connTCP, string(result), root)
 
 }
 

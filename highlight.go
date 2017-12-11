@@ -98,7 +98,7 @@ func getLanguages() {
 			languages[lang] = true
 		}
 		return languages, nil
-	}, 50, 100*time.Millisecond)
+	}, 120, 250*time.Millisecond)
 	if err != nil {
 		Log.Errorf("Prism.js initialization failed - giving up on the following error: %s", err)
 		return

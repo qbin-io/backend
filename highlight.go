@@ -83,7 +83,14 @@ func ParseSyntax(language string) string {
 }
 
 // getLanguages reads the existing languages from the prism-server for use with SyntaxExists.
+var gettingLanguages = false
+
 func getLanguages() {
+	if gettingLanguages {
+		return
+	}
+	gettingLanguages = true
+
 	result, err := try(func() (interface{}, error) {
 		// Get list of existing languages from prism-server
 		result, err := Highlight("", "list")
@@ -101,8 +108,10 @@ func getLanguages() {
 	}, 120, 250*time.Millisecond)
 	if err != nil {
 		Log.Errorf("Prism.js initialization failed - giving up on the following error: %s", err)
+		gettingLanguages = false
 		return
 	}
 	Log.Debugf("Prism.js initialization succeeded.")
 	languages = result.(map[string]bool)
+	gettingLanguages = false
 }

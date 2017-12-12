@@ -100,6 +100,7 @@ func handleMsgProcessing(conn net.Conn, msg string, root string) {
 		Syntax:     "",
 		Expiration: defaultExpiration,
 		Address:    conn.RemoteAddr().String(),
+		Views:      1,
 	}
 
 	err := qbin.Store(&doc)

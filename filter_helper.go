@@ -3,7 +3,6 @@ package qbin
 import (
 	"errors"
 	"regexp"
-	"strings"
 )
 
 //Disclaimer:
@@ -15,14 +14,28 @@ func FilterSpam(doc *Document) error {
 	Log.Warning("Spamfiltering is still in deveopement.")
 	Log.Debug("Starting spamcheck.")
 
-	//TODO: multiplier by linecount
+	//Count word and determin, how many links are allowed in the document
+	wordCount := len(regexp.MustCompile("\\w*\\S+\\w*").FindAllStringIndex(doc.Content, -1))
+	var allowedLinks int
+	switch {
+	case wordCount > 123:
+		allowedLinks = 30
+	case wordCount > 50:
+		allowedLinks = (wordCount / 8)
+	case wordCount > 10:
+		allowedLinks = 2 + (wordCount / 15)
+	case wordCount == 1:
+		allowedLinks = 0
+	default:
+		allowedLinks = 1
+	}
 
-	lines := strings.Count(doc.Content, "\n")
 	//Count links with regex
 	links := len(regexp.MustCompile("(https://|http://)?(www)?[a-z0-9]*\\.[a-z0-9]*/?").FindAllStringIndex(doc.Content, -1))
 
+	Log.Debugf("words: %i \n links: %i", wordCount, links)
 	//check if there are too many links:
-	if links*10 >= lines {
+	if links > allowedLinks {
 		Log.Error("Content was classified as Spam and will be safed to Spam Table")
 		go saveToSpam(doc)
 		return errors.New("Internal Server Error")

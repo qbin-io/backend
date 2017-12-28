@@ -5,10 +5,6 @@ import (
 	"regexp"
 )
 
-//Disclaimer:
-//Parts of the Filter code are copied from https://github.com/BlogSpam-Net/blogspam-api
-//
-
 //FilterSpam ->Filter content with different Filters to categories spam
 func FilterSpam(doc *Document) error {
 	Log.Warning("Spamfiltering is still in deveopement.")
@@ -18,8 +14,10 @@ func FilterSpam(doc *Document) error {
 	wordCount := len(regexp.MustCompile("\\w*\\S+\\w*").FindAllStringIndex(doc.Content, -1))
 	var allowedLinks int
 	switch {
+	case wordCount > 500:
+		allowedLinks = wordCount
 	case wordCount > 123:
-		allowedLinks = 30
+		allowedLinks = 30 + wordCount/10
 	case wordCount > 50:
 		allowedLinks = (wordCount / 8)
 	case wordCount > 10:
@@ -31,7 +29,7 @@ func FilterSpam(doc *Document) error {
 	}
 
 	//Count links with regex
-	links := len(regexp.MustCompile("(https://|http://)?(www)?[a-z0-9]*\\.[a-z0-9]*/?").FindAllStringIndex(doc.Content, -1))
+	links := len(regexp.MustCompile("(https://|http://)?(www)?([a-z0-9]+\\.)+[a-z0-9]+/?").FindAllStringIndex(doc.Content, -1))
 
 	Log.Debugf("words: %i \n links: %i", wordCount, links)
 	//check if there are too many links:

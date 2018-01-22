@@ -111,6 +111,7 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 	if !qbin.SyntaxExists(doc.Syntax) {
 		res.WriteHeader(400)
 		fmt.Fprintf(res, "Invalid syntax name.\n")
+		return
 	}
 
 	if req.Header.Get("R") != "" || req.FormValue("R") != "" {

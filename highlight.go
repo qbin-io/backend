@@ -3,6 +3,7 @@ package qbin
 import (
 	"io/ioutil"
 	"net"
+	"sort"
 	"strings"
 	"time"
 )
@@ -40,7 +41,10 @@ func Highlight(content string, language string) (string, error) {
 
 	conn.Close()
 
-	ln := `<span class="line-number"></span>`
+	ln := ""
+	if language != "list" {
+		ln = `<span class="line-number"></span>`
+	}
 	// Don't ask where that 0x00 byte is coming from.
 	// They are following me, and my code is haunted by them.
 	// I guess it's just the closing character from the transmission though.
@@ -90,6 +94,7 @@ func getLanguages() {
 		return
 	}
 	gettingLanguages = true
+	languageSlice := make([]string, 0)
 
 	result, err := try(func() (interface{}, error) {
 		// Get list of existing languages from prism-server
@@ -103,6 +108,9 @@ func getLanguages() {
 		languages := make(map[string]bool)
 		for _, lang := range list {
 			languages[lang] = true
+			if lang != "" {
+				languageSlice = append(languageSlice, lang)
+			}
 		}
 		return languages, nil
 	}, 120, 250*time.Millisecond)
@@ -111,7 +119,8 @@ func getLanguages() {
 		gettingLanguages = false
 		return
 	}
-	Log.Debugf("Prism.js initialization succeeded.")
+	sort.Slice(languageSlice, func(i, j int) bool { return languageSlice[i] < languageSlice[j] })
+	Log.Debugf("Prism.js initialization succeeded. Available languages: %s", strings.Join(languageSlice, ", "))
 	languages = result.(map[string]bool)
 	gettingLanguages = false
 }

@@ -38,25 +38,25 @@ func Store(document *Document) error {
 	// Normalize new lines
 	document.Content = strings.Trim(strings.Replace(strings.Replace(document.Content, "\r\n", "\n", -1), "\r", "\n", -1), "\n") + "\n"
 
-	// Filter Content for Spam
-	errS := FilterSpam(document)
-	if errS != nil {
-		return errS
-	}
-
 	// Don't accept binary files
 	if strings.Contains(document.Content, "\x00") {
 		return errors.New("file contains 0x00 bytes")
 	}
 
-	var content string
 	// Consistency is power!
 	if document.Syntax == "none" {
 		document.Syntax = ""
 	}
-	content, err = Highlight(document.Content, document.Syntax)
+	contentHighlighted, err := Highlight(document.Content, document.Syntax)
 	if err != nil {
 		Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
+	}
+
+	// Filter content for spam
+	err = FilterSpam(document, &contentHighlighted)
+	if err != nil {
+		Log.Warningf("Spam filter hit for document: %s", err)
+		return errors.New("spam: " + err.Error())
 	}
 
 	var expiration interface{}
@@ -68,7 +68,7 @@ func Store(document *Document) error {
 	_, err = db.Exec(
 		"INSERT INTO documents (id, content, syntax, upload, expiration, address, views) VALUES (?, ?, ?, ?, ?, ?, ?)",
 		document.ID,
-		content,
+		contentHighlighted,
 		document.Syntax,
 		document.Upload.UTC().Format("2006-01-02 15:04:05"),
 		expiration,

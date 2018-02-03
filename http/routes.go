@@ -79,7 +79,7 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 				return errors.New("not found")
 			}
 
-			content := `<pre class="line-numbers"><code class="language-javascript">` + doc.Content + `</code></pre>`
+			content := `<pre class="line-numbers"><code class="language-` + doc.Syntax + `">` + doc.Content + `</code></pre>`
 			replaceVariable(body, "content", content)
 			replaceDocumentVariables(body, &doc)
 

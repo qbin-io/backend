@@ -94,7 +94,7 @@ func getLanguages() {
 		return
 	}
 	gettingLanguages = true
-	languageSlice := make([]string, 0)
+	list := make([]string, 0)
 
 	result, err := try(func() (interface{}, error) {
 		// Get list of existing languages from prism-server
@@ -102,25 +102,18 @@ func getLanguages() {
 		if err != nil {
 			return nil, err
 		}
-		list := strings.Split(result, ",")
+		list = strings.Split(result, ",")
 
 		// Set every existing language to true, the default value is false.
-		languages := make(map[string]bool)
-		for _, lang := range list {
-			languages[lang] = true
-			if lang != "" {
-				languageSlice = append(languageSlice, lang)
-			}
-		}
-		return languages, nil
+		return Slice2map(list), nil
 	}, 120, 250*time.Millisecond)
 	if err != nil {
 		Log.Errorf("Prism.js initialization failed - giving up on the following error: %s", err)
 		gettingLanguages = false
 		return
 	}
-	sort.Slice(languageSlice, func(i, j int) bool { return languageSlice[i] < languageSlice[j] })
-	Log.Debugf("Prism.js initialization succeeded. Available languages: %s", strings.Join(languageSlice, ", "))
+	sort.Slice(list, func(i, j int) bool { return list[i] < list[j] })
+	Log.Debugf("Prism.js initialization succeeded. Available languages: %s", strings.Trim(strings.Replace(strings.Join(list, ", "), ", ,", ",", -1), ","))
 	languages = result.(map[string]bool)
 	gettingLanguages = false
 }

@@ -25,6 +25,12 @@ var flags = []cli.Flag{
 		Name: "wordlist", EnvVar: "WORD_LIST", Value: "eff_large_wordlist.txt",
 		Usage: "Word list used for random slug generation."},
 	cli.StringFlag{
+		Name: "blacklist", EnvVar: "BLACKLIST", Value: "blacklist.regex",
+		Usage: "Blacklist file containing one regular expression per line."},
+	cli.StringSliceFlag{
+		Name: "filters", EnvVar: "FILTERS", Value: &cli.StringSlice{"blacklist", "linkcount"},
+		Usage: "Set the spam filters in use. Available filters: blacklist, linkcount"},
+	cli.StringFlag{
 		Name: "prism-server", EnvVar: "PRISM_SERVER", Value: "/tmp/prism-server.sock",
 		Usage: "TCP address or unix socket path (when containing a /) to prism-server."},
 	cli.StringFlag{
@@ -86,6 +92,15 @@ func run(c *cli.Context) error {
 	err := qbin.LoadWordsFile(c.String("wordlist"))
 	if err != nil {
 		qbin.Log.Errorf("Error loading word list from '%s': %s", c.String("wordlist"), err)
+	}
+
+	// Switch filters
+	qbin.FilterEnable = qbin.Slice2map(c.StringSlice("filters"))
+
+	// Load blacklist
+	err = qbin.LoadBlacklistFile(c.String("blacklist"))
+	if err != nil {
+		qbin.Log.Errorf("Error loading blacklist from '%s': %s", c.String("blacklist"), err)
 	}
 
 	// Setup prism-server

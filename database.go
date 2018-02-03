@@ -51,6 +51,23 @@ func Connect(uri string) error {
 		Log.Noticef("Created table `documents`. Database setup completed.")
 	}
 
+	//Create Table Spam
+	var spam string
+	db.QueryRow("SHOW TABLES LIKE 'spam'").Scan(&spam)
+	if spam == "" {
+		Log.Noticef("Setting up spam-database...")
+		err = db.QueryRow(`CREATE TABLE spam (
+            id varchar(30) PRIMARY KEY,
+            content longtext NOT NULL,
+            upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            address varchar(45) NOT NULL
+        )`).Scan()
+		if err != nil && err.Error() != "sql: no rows in result set" {
+			return err
+		}
+		Log.Noticef("Created table `documents`. Database setup completed.")
+	}
+
 	safeName, errSafeName = db.Prepare("SELECT COUNT(id) FROM documents WHERE id = ?")
 
 	isConnected = true

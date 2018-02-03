@@ -141,6 +141,10 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(400)
 		fmt.Fprintf(res, "You are trying to upload a binary file, which is not supported.\n")
 		return
+	} else if err != nil && strings.HasPrefix(err.Error(), "spam: ") {
+		res.WriteHeader(400)
+		fmt.Fprintf(res, "Your file got caught in the spam filter.\nReason: "+strings.TrimPrefix(err.Error(), "spam: ")+"\n")
+		return
 	} else if uploadError("qbin.Store()", err, res, req) {
 		return
 	}

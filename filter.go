@@ -41,7 +41,7 @@ func LoadBlacklistFile(filename string) error {
 func spamcheckBlacklist(doc *Document, highlighted *string) error {
 	for i := 0; i < len(contentBlacklist); i++ {
 		if contentBlacklist[i].MatchString(doc.Content) {
-			return errors.New("document matches content blacklist")
+			return errors.New("document matches blacklist")
 		}
 	}
 
@@ -49,13 +49,13 @@ func spamcheckBlacklist(doc *Document, highlighted *string) error {
 	for i := 0; i < len(links); i++ {
 		for j := 0; j < len(urlBlacklist); j++ {
 			if urlBlacklist[j].MatchString(links[i][1]) {
-				return errors.New("document matches URL blacklist")
+				return errors.New("document matches blacklist")
 			}
 		}
 		domain := domainExpression.FindStringSubmatch(links[i][1])[1]
 		for j := 0; j < len(domainBlacklist); j++ {
 			if domainBlacklist[j].MatchString(domain) {
-				return errors.New("document matches domain blacklist")
+				return errors.New("document matches blacklist")
 			}
 		}
 	}

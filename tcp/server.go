@@ -107,6 +107,8 @@ func handleMsgProcessing(conn net.Conn, msg string, root string) {
 	if err != nil {
 		if err.Error() == "file contains 0x00 bytes" {
 			conn.Write([]byte("You are trying to upload a binary file, which is not supported.\n"))
+		} else if strings.HasPrefix(err.Error(), "spam: ") {
+			conn.Write([]byte("Your file got caught in the spam filter.\nReason: " + strings.TrimPrefix(err.Error(), "spam: ") + "\n"))
 		} else {
 			qbin.Log.Errorf("TCP API error: %s", err)
 			conn.Write([]byte("An error occured, please try again.\n"))

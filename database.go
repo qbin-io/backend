@@ -35,7 +35,7 @@ func Connect(uri string) error {
 	var table string
 	db.QueryRow("SHOW TABLES LIKE 'documents'").Scan(&table)
 	if table == "" {
-		Log.Noticef("Setting up database...")
+		Log.Noticef("Setting up `documents` table...")
 		err = db.QueryRow(`CREATE TABLE documents (
             id varchar(30) PRIMARY KEY,
             content longtext NOT NULL,
@@ -48,14 +48,13 @@ func Connect(uri string) error {
 		if err != nil && err.Error() != "sql: no rows in result set" {
 			return err
 		}
-		Log.Noticef("Created table `documents`. Database setup completed.")
 	}
 
 	//Create Table Spam
 	var spam string
 	db.QueryRow("SHOW TABLES LIKE 'spam'").Scan(&spam)
 	if spam == "" {
-		Log.Noticef("Setting up spam-database...")
+		Log.Noticef("Setting up `spam` table...")
 		err = db.QueryRow(`CREATE TABLE spam (
             id varchar(30) PRIMARY KEY,
             content longtext NOT NULL,
@@ -65,7 +64,6 @@ func Connect(uri string) error {
 		if err != nil && err.Error() != "sql: no rows in result set" {
 			return err
 		}
-		Log.Noticef("Created table `documents`. Database setup completed.")
 	}
 
 	safeName, errSafeName = db.Prepare("SELECT COUNT(id) FROM documents WHERE id = ?")

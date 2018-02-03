@@ -5,11 +5,18 @@ import (
 	"regexp"
 )
 
-//FilterSpam ->Filter content with different Filters to categories spam
-func FilterSpam(doc *Document) error {
-	Log.Warning("Spamfiltering is still in deveopement.")
-	Log.Debug("Starting spamcheck.")
+var blacklist = []regexp.Regexp{}
 
+func spamcheckBlacklist(doc *Document) error {
+	for i := 0; i < len(blacklist); i++ {
+		if blacklist[i].MatchString(doc.Content) {
+			return errors.New("document matches blacklist (#" + string(i) + ")")
+		}
+	}
+	return nil
+}
+
+func spamcheckLinkCount(doc *Document) error {
 	//Count word and determin, how many links are allowed in the document
 	wordCount := len(regexp.MustCompile("\\w*\\S+\\w*").FindAllStringIndex(doc.Content, -1))
 	var allowedLinks int
@@ -34,10 +41,22 @@ func FilterSpam(doc *Document) error {
 	Log.Debugf("words: %i \n links: %i", wordCount, links)
 	//check if there are too many links:
 	if links > allowedLinks {
-		Log.Error("Content was classified as Spam and will be safed to Spam Table")
-		go saveToSpam(doc)
-		return errors.New("Internal Server Error")
+		return errors.New("")
 	}
+}
+
+//FilterSpam ->Filter content with different Filters to categories spam
+func FilterSpam(doc *Document) error {
+	if err := spamcheckBlacklist(doc); err != nil {
+		go saveToSpam(doc)
+		return err
+	}
+
+	if err := spamcheckLinkCount(doc); err != nil {
+		go saveToSpam(doc)
+		return err
+	}
+
 	return nil
 }
 

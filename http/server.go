@@ -49,7 +49,8 @@ func initializeConfig(initialConfig Configuration) {
 	}
 	config.path = strings.TrimSuffix("/"+strings.TrimPrefix(config.path, "/"), "/")
 
-	config.domain = strings.Split(strings.TrimPrefix(strings.ToLower(config.Root), "https://"), "/")[0]
+	rootParts = strings.SplitN(strings.ToLower(config.Root), "://", 2)
+	config.domain = strings.Split(rootParts[len(rootParts)-1], "/")[0]
 }
 
 // StartHTTP launches the HTTP server which is responsible for the frontend and the HTTP API.
@@ -79,8 +80,10 @@ func StartHTTP(initialConfig Configuration) {
 			if req.Host != config.domain || !strings.HasPrefix(req.URL.Path, config.path+"/") {
 				if !strings.HasPrefix(req.URL.Path, config.path+"/") {
 					res.Header().Add("Location", config.Root)
+					res.WriteHeader(301)
 				} else {
 					res.Header().Add("Location", config.Root+config.path+strings.TrimPrefix(req.URL.Path, config.path))
+					res.WriteHeader(301)
 				}
 			} else {
 				next(res, req)

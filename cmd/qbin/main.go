@@ -66,7 +66,7 @@ func main() {
 	app := cli.NewApp()
 
 	app.Name = "qbin"
-	app.Version = "2.0.0a1"
+	app.Version = "2.0.0"
 	app.Usage = "a minimalist pastebin service"
 	app.Flags = flags
 

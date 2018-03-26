@@ -93,7 +93,7 @@ func handleMsgProcessing(conn net.Conn, msg string, root string) {
 	}
 
 	// Create and store document
-	defaultExpiration, _ = qbin.ParseExpiration("14d")
+	defaultExpiration, _ := qbin.ParseExpiration("14d")
 	doc := qbin.Document{
 		Content:    msg,
 		Syntax:     "",

@@ -85,8 +85,6 @@ func handleClient(conn net.Conn, root string) {
 	}
 }
 
-var defaultExpiration, _ = qbin.ParseExpiration("14d")
-
 func handleMsgProcessing(conn net.Conn, msg string, root string) {
 	//length = 0 -> user already closed connection
 	if len(msg) == 0 {
@@ -95,6 +93,7 @@ func handleMsgProcessing(conn net.Conn, msg string, root string) {
 	}
 
 	// Create and store document
+	defaultExpiration, _ = qbin.ParseExpiration("14d")
 	doc := qbin.Document{
 		Content:    msg,
 		Syntax:     "",

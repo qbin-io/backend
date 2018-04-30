@@ -6,4 +6,4 @@ Contains API and webserver code. [To the main repository](https://github.com/qbi
 
 ---
 ### » [Documentation](http://qbin-io.viewdocs.io/qbin/) and more information
-### » [Public Version](https://beta.qbin.io/) - see qbin in action
+### » [Public Version](https://.qbin.io/) - see qbin in action

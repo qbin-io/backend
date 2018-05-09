@@ -79,7 +79,12 @@ func documentRoute() func(http.ResponseWriter, *http.Request) {
 				return errors.New("not found")
 			}
 
-			content := `<pre class="line-numbers"><code class="language-` + doc.Syntax + `">` + doc.Content + `</code></pre>`
+			content := ""
+			if doc.Syntax == "markdown!" {
+				content = `<div class="markdown">` + doc.Content + `</div>`
+			} else {
+				content = `<pre class="line-numbers"><code class="language-` + doc.Syntax + `">` + doc.Content + `</code></pre>`
+			}
 			replaceVariable(body, "content", content)
 			replaceDocumentVariables(body, &doc)
 

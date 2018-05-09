@@ -6,6 +6,9 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/microcosm-cc/bluemonday"
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 // PrismServer defines the TCP address or unix socket path (containing a /) to prism-server.
@@ -14,6 +17,12 @@ var languages map[string]bool
 
 // Highlight performs syntax highlighting on a string using Prism.js running under node.js.
 func Highlight(content string, language string) (string, error) {
+	if language == "markdown!" {
+		unsafe := blackfriday.Run([]byte(content))
+		content = string(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
+		return content, nil
+	}
+
 	var conn net.Conn
 	var err error
 	if strings.Contains(PrismServer, "/") {
@@ -53,6 +62,9 @@ func Highlight(content string, language string) (string, error) {
 
 // SyntaxExists checks if a given syntax definition exists in Prism.js.
 func SyntaxExists(language string) bool {
+	if language == "markdown!" {
+		return true
+	}
 	if languages == nil {
 		// Try getting the language list for the next document, seems like something broke or we're starting without prism-server.
 		go getLanguages()

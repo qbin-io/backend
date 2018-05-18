@@ -126,11 +126,10 @@ func FilterSpam(doc *Document, highlighted *string) error {
 
 func saveToSpam(doc *Document) {
 	_, err := db.Exec(
-		"INSERT INTO spam (id, content, upload, address) VALUES (?, ?, ?, ?)",
+		"INSERT INTO spam (id, content, upload) VALUES (?, ?, ?)",
 		doc.ID,
 		doc.Content,
-		doc.Upload.UTC().Format("2006-01-02 15:04:05"),
-		doc.Address)
+		doc.Upload.UTC().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		Log.Errorf("An error occured while saving spam to spam-DB: %s", err)
 	}

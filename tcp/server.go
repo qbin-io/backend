@@ -98,7 +98,6 @@ func handleMsgProcessing(conn net.Conn, msg string, root string) {
 		Content:    msg,
 		Syntax:     "",
 		Expiration: defaultExpiration,
-		Address:    conn.RemoteAddr().String(),
 		Views:      1,
 	}
 

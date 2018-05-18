@@ -21,7 +21,7 @@ func uploadError(during string, err error, res http.ResponseWriter, req *http.Re
 func uploadRoute(res http.ResponseWriter, req *http.Request) {
 	var err error
 
-	doc := qbin.Document{Address: req.RemoteAddr}
+	doc := qbin.Document{}
 	exp := "14d"
 	redirect := false
 	sizeExceeded := false

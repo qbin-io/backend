@@ -23,7 +23,6 @@ type Document struct {
 	// Upload is set on Store()
 	Upload     time.Time
 	Expiration time.Time
-	Address    string
 	Views      int
 	Custom     string
 }
@@ -88,14 +87,13 @@ func Store(document *Document) error {
 
 	// Write the document to the database
 	_, err = db.Exec(
-		"INSERT INTO documents (id, content, custom, syntax, upload, expiration, address, views) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		"INSERT INTO documents (id, content, custom, syntax, upload, expiration, views) VALUES (?, ?, ?, ?, ?, ?, ?)",
 		hex.EncodeToString(databaseID[:]),
 		string(data),
 		document.Custom,
 		document.Syntax,
 		document.Upload.UTC().Format("2006-01-02 15:04:05"),
 		expiration,
-		document.Address,
 		document.Views)
 	if err != nil {
 		return err
@@ -109,8 +107,8 @@ func Request(id string, raw bool) (Document, error) {
 	var views int
 	var upload, expiration sql.NullString
 	databaseID := sha256.Sum256([]byte(id))
-	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, address, views FROM documents WHERE id = ?", hex.EncodeToString(databaseID[:])).
-		Scan(&doc.Content, &doc.Custom, &doc.Syntax, &upload, &expiration, &doc.Address, &views)
+	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, views FROM documents WHERE id = ?", hex.EncodeToString(databaseID[:])).
+		Scan(&doc.Content, &doc.Custom, &doc.Syntax, &upload, &expiration, &views)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
 			Log.Warningf("Error retrieving document: %s", err)
@@ -118,7 +116,7 @@ func Request(id string, raw bool) (Document, error) {
 		return Document{}, err
 	}
 
-	go db.Exec("UPDATE documents SET views = views + 1 WHERE id = ?", id)
+	go db.Exec("UPDATE documents SET views = views + 1 WHERE id = ?", hex.EncodeToString(databaseID[:]))
 	doc.Views = views
 
 	doc.Upload, _ = time.Parse("2006-01-02 15:04:05", upload.String)
@@ -130,11 +128,12 @@ func Request(id string, raw bool) (Document, error) {
 		return Document{}, err
 	}
 	data, err := decrypt([]byte(doc.Content), key)
-	if err != nil {
+	if err != nil && !(err.Error() == "cipher: message authentication failed" && !strings.Contains(doc.Content, "\000")) {
 		Log.Criticalf("AES error: %s", err)
 		return Document{}, err
+	} else if err == nil {
+		doc.Content = string(data)
 	}
-	doc.Content = string(data)
 
 	if expiration.Valid {
 		doc.Expiration, err = time.Parse("2006-01-02 15:04:05", expiration.String)

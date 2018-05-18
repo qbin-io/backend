@@ -43,7 +43,6 @@ func Connect(uri string) error {
             syntax varchar(30) NOT NULL DEFAULT "",
             upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             expiration datetime NULL DEFAULT NULL,
-            address varchar(45) NOT NULL,
             views int UNSIGNED NOT NULL DEFAULT 0
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`).Scan()
 		if err != nil && err.Error() != "sql: no rows in result set" {
@@ -59,8 +58,7 @@ func Connect(uri string) error {
 		err = db.QueryRow(`CREATE TABLE spam (
             id varchar(30) PRIMARY KEY,
             content longtext NOT NULL,
-            upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            address varchar(45) NOT NULL
+            upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`).Scan()
 		if err != nil && err.Error() != "sql: no rows in result set" {
 			return err

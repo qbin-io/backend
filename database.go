@@ -39,6 +39,7 @@ func Connect(uri string) error {
 		err = db.QueryRow(`CREATE TABLE documents (
             id varchar(30) PRIMARY KEY,
             content longtext NOT NULL,
+            custom text NOT NULL DEFAULT "",
             syntax varchar(30) NOT NULL DEFAULT "",
             upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             expiration datetime NULL DEFAULT NULL,

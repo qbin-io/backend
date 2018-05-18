@@ -20,6 +20,7 @@ type Document struct {
 	Expiration time.Time
 	Address    string
 	Views      int
+	Custom     string
 }
 
 // Store a document object in the database.
@@ -43,13 +44,17 @@ func Store(document *Document) error {
 		return errors.New("file contains 0x00 bytes")
 	}
 
-	// Consistency is power!
-	if document.Syntax == "none" {
-		document.Syntax = ""
-	}
-	contentHighlighted, err := Highlight(document.Content, document.Syntax)
-	if err != nil {
-		Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
+	contentHighlighted := ""
+	if document.Custom == "" {
+		if document.Syntax == "none" {
+			document.Syntax = ""
+		}
+		contentHighlighted, err = Highlight(document.Content, document.Syntax)
+		if err != nil {
+			Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
+		}
+	} else {
+		contentHighlighted = EscapeHTML(document.Content)
 	}
 
 	// Filter content for spam
@@ -66,9 +71,10 @@ func Store(document *Document) error {
 
 	// Write the document to the database
 	_, err = db.Exec(
-		"INSERT INTO documents (id, content, syntax, upload, expiration, address, views) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		"INSERT INTO documents (id, content, custom, syntax, upload, expiration, address, views) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		document.ID,
 		contentHighlighted,
+		document.Custom,
 		document.Syntax,
 		document.Upload.UTC().Format("2006-01-02 15:04:05"),
 		expiration,
@@ -85,8 +91,8 @@ func Request(id string, raw bool) (Document, error) {
 	doc := Document{ID: id}
 	var views int
 	var upload, expiration sql.NullString
-	err := db.QueryRow("SELECT content, syntax, upload, expiration, address, views FROM documents WHERE id = ?", id).
-		Scan(&doc.Content, &doc.Syntax, &upload, &expiration, &doc.Address, &views)
+	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, address, views FROM documents WHERE id = ?", id).
+		Scan(&doc.Content, &doc.Custom, &doc.Syntax, &upload, &expiration, &doc.Address, &views)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
 			Log.Warningf("Error retrieving document: %s", err)

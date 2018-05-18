@@ -75,6 +75,7 @@ func replaceDocumentVariables(content *string, doc *qbin.Document) {
 		replaceBlockVariable(content, "if_volatile", false)
 	}
 
+	replaceBlockVariable(content, "if_encrypted", doc.Custom == "encrypted")
 }
 
 func formatTime(t time.Time, relative bool) string {

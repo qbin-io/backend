@@ -118,6 +118,12 @@ func uploadRoute(res http.ResponseWriter, req *http.Request) {
 		redirect = true
 	}
 
+	if req.Header.Get("C") != "" {
+		doc.Custom = req.Header.Get("C")
+	} else if req.FormValue("C") != "" {
+		doc.Custom = req.FormValue("C")
+	}
+
 	if req.Header.Get("E") != "" {
 		exp = req.Header.Get("E")
 	} else if req.FormValue("E") != "" {

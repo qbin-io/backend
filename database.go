@@ -37,8 +37,8 @@ func Connect(uri string) error {
 	if table == "" {
 		Log.Noticef("Setting up `documents` table...")
 		err = db.QueryRow(`CREATE TABLE documents (
-            id varchar(30) PRIMARY KEY,
-            content longtext NOT NULL,
+            id varchar(64) PRIMARY KEY,
+            content longblob NOT NULL,
             custom text NOT NULL DEFAULT "",
             syntax varchar(30) NOT NULL DEFAULT "",
             upload datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

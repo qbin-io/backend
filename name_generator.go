@@ -2,7 +2,9 @@ package qbin
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"io/ioutil"
 	"math/big"
@@ -84,7 +86,8 @@ func GenerateSafeName() (string, error) {
 		if name == "" {
 			return "", errors.New("name generation failed")
 		}
-		err := safeName.QueryRow(name).Scan(&rows)
+		databaseID := sha256.Sum256([]byte(name))
+		err := safeName.QueryRow(hex.EncodeToString(databaseID[:])).Scan(&rows)
 		if err != nil {
 			return "", err
 		}

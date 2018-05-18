@@ -2,9 +2,14 @@ package qbin
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/scrypt"
+
+	"crypto/sha256"
 )
 
 const MaxFilesize = 1024 * 1024 // 1MB
@@ -69,11 +74,23 @@ func Store(document *Document) error {
 		expiration = document.Expiration.UTC().Format("2006-01-02 15:04:05")
 	}
 
+	// Server-Side Encryption
+	key, err := scrypt.Key([]byte(document.ID), []byte(document.Upload.UTC().Format("2006-01-02 15:04:05")), 16384, 8, 1, 24)
+	if err != nil {
+		Log.Criticalf("Invalid script parameters: %s", err)
+	}
+	data, err := encrypt([]byte(contentHighlighted), key)
+	if err != nil {
+		Log.Criticalf("AES error: %s", err)
+		return err
+	}
+	databaseID := sha256.Sum256([]byte(document.ID))
+
 	// Write the document to the database
 	_, err = db.Exec(
 		"INSERT INTO documents (id, content, custom, syntax, upload, expiration, address, views) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		document.ID,
-		contentHighlighted,
+		hex.EncodeToString(databaseID[:]),
+		string(data),
 		document.Custom,
 		document.Syntax,
 		document.Upload.UTC().Format("2006-01-02 15:04:05"),
@@ -91,7 +108,8 @@ func Request(id string, raw bool) (Document, error) {
 	doc := Document{ID: id}
 	var views int
 	var upload, expiration sql.NullString
-	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, address, views FROM documents WHERE id = ?", id).
+	databaseID := sha256.Sum256([]byte(id))
+	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, address, views FROM documents WHERE id = ?", hex.EncodeToString(databaseID[:])).
 		Scan(&doc.Content, &doc.Custom, &doc.Syntax, &upload, &expiration, &doc.Address, &views)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
@@ -104,6 +122,19 @@ func Request(id string, raw bool) (Document, error) {
 	doc.Views = views
 
 	doc.Upload, _ = time.Parse("2006-01-02 15:04:05", upload.String)
+
+	// Server-Side Decryption
+	key, err := scrypt.Key([]byte(id), []byte(doc.Upload.UTC().Format("2006-01-02 15:04:05")), 16384, 8, 1, 24)
+	if err != nil {
+		Log.Criticalf("Invalid script parameters: %s", err)
+		return Document{}, err
+	}
+	data, err := decrypt([]byte(doc.Content), key)
+	if err != nil {
+		Log.Criticalf("AES error: %s", err)
+		return Document{}, err
+	}
+	doc.Content = string(data)
 
 	if expiration.Valid {
 		doc.Expiration, err = time.Parse("2006-01-02 15:04:05", expiration.String)

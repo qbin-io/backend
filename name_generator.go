@@ -17,7 +17,7 @@ var characters = strings.Split("abcdefghijklmnopqrstuvwxyz0123456789", "")
 func randomWord(array []string, try int, err error) string {
 	if try > 10 {
 		// We somehow tried 10 times to get a random value and it failed every time. Something is extremely wrong here.
-		Log.Criticalf("crypto/rand issue - something is probably extremely wrong! %s", err)
+		Log.Errorf("crypto/rand issue - something is probably extremely wrong! %s", err)
 		panic(err)
 	}
 

@@ -109,7 +109,7 @@ func run(c *cli.Context) error {
 	// Connect to database
 	err = qbin.Connect(c.String("database"))
 	if err != nil {
-		qbin.Log.Criticalf("Error connecting to database: %s", err)
+		qbin.Log.Errorf("Error connecting to database: %s", err)
 		panic(err)
 	}
 

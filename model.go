@@ -76,11 +76,11 @@ func Store(document *Document) error {
 	// Server-Side Encryption
 	key, err := scrypt.Key([]byte(document.ID), []byte(document.Upload.UTC().Format("2006-01-02 15:04:05")), 16384, 8, 1, 24)
 	if err != nil {
-		Log.Criticalf("Invalid script parameters: %s", err)
+		Log.Errorf("Invalid script parameters: %s", err)
 	}
 	data, err := encrypt([]byte(contentHighlighted), key)
 	if err != nil {
-		Log.Criticalf("AES error: %s", err)
+		Log.Errorf("AES error: %s", err)
 		return err
 	}
 	databaseID := sha256.Sum256([]byte(document.ID))
@@ -124,12 +124,12 @@ func Request(id string, raw bool) (Document, error) {
 	// Server-Side Decryption
 	key, err := scrypt.Key([]byte(id), []byte(doc.Upload.UTC().Format("2006-01-02 15:04:05")), 16384, 8, 1, 24)
 	if err != nil {
-		Log.Criticalf("Invalid script parameters: %s", err)
+		Log.Errorf("Invalid script parameters: %s", err)
 		return Document{}, err
 	}
 	data, err := decrypt([]byte(doc.Content), key)
 	if err != nil && !(err.Error() == "cipher: message authentication failed" && !strings.Contains(doc.Content, "\000")) {
-		Log.Criticalf("AES error: %s", err)
+		Log.Errorf("AES error: %s", err)
 		return Document{}, err
 	} else if err == nil {
 		doc.Content = string(data)

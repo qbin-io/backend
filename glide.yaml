@@ -1,0 +1,20 @@
+package: github.com/qbin-io/backend
+import:
+- package: github.com/go-sql-driver/mysql
+  version: ^1.4.0
+- package: github.com/gorilla/mux
+  version: ^1.6.2
+- package: github.com/microcosm-cc/bluemonday
+  version: ^1.0.1
+- package: github.com/op/go-logging
+  version: ^1.0.0
+- package: github.com/urfave/cli
+  version: ^1.20.0
+- package: github.com/urfave/negroni
+  version: ^1.0.0
+- package: golang.org/x/crypto
+  subpackages:
+  - acme/autocert
+  - scrypt
+- package: gopkg.in/russross/blackfriday.v2
+  version: ^2.0.1

@@ -17,7 +17,7 @@ func StartTCP(listen string, root string) {
 	// Resolve TCP listen address
 	tcpAddr, err := net.ResolveTCPAddr("tcp", listen)
 	if err != nil {
-		qbin.Log.Criticalf("TCP resolve error: %s", err)
+		qbin.Log.Errorf("TCP resolve error: %s", err)
 		panic(err)
 	}
 
@@ -25,7 +25,7 @@ func StartTCP(listen string, root string) {
 	qbin.Log.Noticef("TCP server starting on %s, you should be able to reach it at %s%s", listen, getRoot(root), listen)
 	listenerTCP, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
-		qbin.Log.Criticalf("TCP server error: %s", err)
+		qbin.Log.Errorf("TCP server error: %s", err)
 		panic(err)
 	}
 

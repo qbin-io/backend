@@ -132,7 +132,7 @@ func listenHTTPS(r http.Handler) {
 
 	err := server.ListenAndServeTLS("", "")
 	if err != nil {
-		qbin.Log.Criticalf("HTTPS server error: %s", err)
+		qbin.Log.Errorf("HTTPS server error: %s", err)
 		panic(err)
 	}
 }
@@ -140,7 +140,7 @@ func listenHTTPS(r http.Handler) {
 func listenHTTP(r http.Handler) {
 	err := http.ListenAndServe(config.ListenHTTP, r)
 	if err != nil {
-		qbin.Log.Criticalf("HTTP server error: %s", err)
+		qbin.Log.Errorf("HTTP server error: %s", err)
 		panic(err)
 	}
 }

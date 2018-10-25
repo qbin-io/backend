@@ -136,11 +136,11 @@ func Request(id string, raw bool) (Document, error) {
 	}
 
 	if expiration.Valid {
-		doc.Expiration, err = time.Parse("2006-01-02 15:04:05", expiration.String)
-		if doc.Expiration.Before(time.Unix(0, 1)) {
+        doc.Expiration, err = time.Parse("2006-01-02 15:04:05", expiration.String)
+        if doc.Expiration.Before(time.Unix(0, 1)) {
 			if doc.Views > 0 {
 				// Volatile document
-				_, err = db.Exec("DELETE FROM documents WHERE id = ?", id)
+				_, err = db.Exec("DELETE FROM documents WHERE id = ?", hex.EncodeToString(databaseID[:]))
 				if err != nil {
 					Log.Errorf("Couldn't delete volatile document: %s", err)
 				}

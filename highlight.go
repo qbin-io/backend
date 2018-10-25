@@ -16,11 +16,11 @@ var PrismServer = "/tmp/prism-server.sock"
 var languages map[string]bool
 
 // Highlight performs syntax highlighting on a string using Prism.js running under node.js.
-func Highlight(content string, language string) (string, error) {
+func Highlight(content string, language string) (string, bool, error) {
 	if language == "markdown!" {
 		unsafe := blackfriday.Run([]byte(content))
 		content = string(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
-		return content, nil
+		return content, true, nil
 	}
 
 	var conn net.Conn
@@ -32,7 +32,7 @@ func Highlight(content string, language string) (string, error) {
 	}
 
 	if err != nil {
-		return content, err
+		return content, false, err
 	}
 
 	_, err = conn.Write([]byte(language + "\n" + content))
@@ -40,12 +40,12 @@ func Highlight(content string, language string) (string, error) {
 		_, err = conn.Write([]byte{0})
 	}
 	if err != nil {
-		return content, err
+		return content, false, err
 	}
 
 	result, err := ioutil.ReadAll(conn)
 	if err != nil {
-		return content, err
+		return content, false, err
 	}
 
 	conn.Close()
@@ -57,7 +57,7 @@ func Highlight(content string, language string) (string, error) {
 	// Don't ask where that 0x00 byte is coming from.
 	// They are following me, and my code is haunted by them.
 	// I guess it's just the closing character from the transmission though.
-	return ln + strings.Replace(strings.TrimSuffix(string(result), "\x00"), "\n", "\n"+ln, -1), nil
+	return ln + strings.Replace(strings.TrimSuffix(string(result), "\x00"), "\n", "\n"+ln, -1), false, nil
 }
 
 // SyntaxExists checks if a given syntax definition exists in Prism.js.
@@ -110,7 +110,7 @@ func getLanguages() {
 
 	result, err := try(func() (interface{}, error) {
 		// Get list of existing languages from prism-server
-		result, err := Highlight("", "list")
+		result, _, err := Highlight("", "list")
 		if err != nil {
 			return nil, err
 		}

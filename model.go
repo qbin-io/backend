@@ -48,12 +48,13 @@ func Store(document *Document) error {
 		return errors.New("file contains 0x00 bytes")
 	}
 
-	contentHighlighted := ""
+    contentHighlighted := ""
+    originalRequired := false
 	if document.Custom == "" {
 		if document.Syntax == "none" {
 			document.Syntax = ""
 		}
-		contentHighlighted, err = Highlight(document.Content, document.Syntax)
+		contentHighlighted, originalRequired, err = Highlight(document.Content, document.Syntax)
 		if err != nil {
 			Log.Warningf("Skipped syntax highlighting for the following reason: %s", err)
 		}
@@ -82,19 +83,32 @@ func Store(document *Document) error {
 	if err != nil {
 		Log.Errorf("AES error: %s", err)
 		return err
-	}
+    }
+    rawData := sql.NullString{}
+    if originalRequired {
+        s, err := encrypt([]byte(document.Content), key)
+        if err != nil {
+            Log.Errorf("AES error: %s", err)
+            return err
+        }
+        rawData = sql.NullString{
+            String: string(s),
+            Valid: true,
+       }
+    }
 	databaseID := sha256.Sum256([]byte(document.ID))
 
 	// Write the document to the database
 	_, err = db.Exec(
-		"INSERT INTO documents (id, content, custom, syntax, upload, expiration, views) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		"INSERT INTO documents (id, content, custom, syntax, upload, expiration, views, raw) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		hex.EncodeToString(databaseID[:]),
 		string(data),
 		document.Custom,
 		document.Syntax,
 		document.Upload.UTC().Format("2006-01-02 15:04:05"),
 		expiration,
-		document.Views)
+        document.Views,
+        rawData)
 	if err != nil {
 		return err
 	}
@@ -105,10 +119,10 @@ func Store(document *Document) error {
 func Request(id string, raw bool) (Document, error) {
 	doc := Document{ID: id}
 	var views int
-	var upload, expiration sql.NullString
+	var upload, expiration, rawString sql.NullString
 	databaseID := sha256.Sum256([]byte(id))
-	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, views FROM documents WHERE id = ?", hex.EncodeToString(databaseID[:])).
-		Scan(&doc.Content, &doc.Custom, &doc.Syntax, &upload, &expiration, &views)
+	err := db.QueryRow("SELECT content, custom, syntax, upload, expiration, views, raw FROM documents WHERE id = ?", hex.EncodeToString(databaseID[:])).
+		Scan(&doc.Content, &doc.Custom, &doc.Syntax, &upload, &expiration, &views, &rawString)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
 			Log.Warningf("Error retrieving document: %s", err)
@@ -121,7 +135,10 @@ func Request(id string, raw bool) (Document, error) {
 
 	doc.Upload, _ = time.Parse("2006-01-02 15:04:05", upload.String)
 
-	// Server-Side Decryption
+    // Server-Side Decryption
+    if raw && rawString.Valid {
+        doc.Content = rawString.String
+    }
 	key, err := scrypt.Key([]byte(id), []byte(doc.Upload.UTC().Format("2006-01-02 15:04:05")), 16384, 8, 1, 24)
 	if err != nil {
 		Log.Errorf("Invalid script parameters: %s", err)
